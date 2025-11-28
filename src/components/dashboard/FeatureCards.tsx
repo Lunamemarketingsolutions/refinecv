@@ -65,7 +65,7 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
       usageColor: 'text-purple-600',
       buttonBg: 'bg-purple-600 hover:bg-purple-700',
       buttonText: 'Start Enhancement',
-      path: '/features/cv-enhancer',
+      path: '/cv-enhancer',
     },
   ];
 

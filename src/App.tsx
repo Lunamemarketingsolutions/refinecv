@@ -20,6 +20,9 @@ import ATSResults from './pages/ats-tool/ATSResults';
 import JDMatchUpload from './pages/jd-match-tool/JDMatchUpload';
 import JDMatchAnalyzing from './pages/jd-match-tool/JDMatchAnalyzing';
 import JDMatchResults from './pages/jd-match-tool/JDMatchResults';
+import EnhancerUpload from './pages/cv-enhancer-tool/EnhancerUpload';
+import EnhancerAnalyzing from './pages/cv-enhancer-tool/EnhancerAnalyzing';
+import EnhancerEditor from './pages/cv-enhancer-tool/EnhancerEditor';
 
 function App() {
   return (
@@ -46,6 +49,9 @@ function App() {
             <Route path="/jd-match-tool" element={<JDMatchUpload />} />
             <Route path="/jd-match-tool/analyzing/:matchId" element={<JDMatchAnalyzing />} />
             <Route path="/jd-match-tool/results/:matchId" element={<JDMatchResults />} />
+            <Route path="/cv-enhancer" element={<EnhancerUpload />} />
+            <Route path="/cv-enhancer/analyzing/:enhancementId" element={<EnhancerAnalyzing />} />
+            <Route path="/cv-enhancer/editor/:enhancementId" element={<EnhancerEditor />} />
           </Routes>
         </AuthProvider>
       </Router>

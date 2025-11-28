@@ -29,7 +29,7 @@ export default function Sidebar({ user, usageToday }: SidebarProps) {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Eye, label: 'ATS Analyzer', path: '/ats-tool' },
     { icon: Target, label: 'JD CV Match', path: '/jd-match-tool' },
-    { icon: Sparkles, label: 'CV Enhancer', path: '/features/cv-enhancer' },
+    { icon: Sparkles, label: 'CV Enhancer', path: '/cv-enhancer' },
     { icon: FileText, label: 'My CVs', path: '/my-cvs', divider: true },
     { icon: Clock, label: 'History', path: '/history' },
   ];
@@ -40,6 +40,9 @@ export default function Sidebar({ user, usageToday }: SidebarProps) {
     }
     if (path === '/jd-match-tool') {
       return location.pathname.startsWith('/jd-match-tool');
+    }
+    if (path === '/cv-enhancer') {
+      return location.pathname.startsWith('/cv-enhancer');
     }
     return location.pathname === path;
   };
