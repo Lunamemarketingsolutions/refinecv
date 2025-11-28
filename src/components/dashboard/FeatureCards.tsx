@@ -29,7 +29,7 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
       usageColor: 'text-primary',
       buttonBg: 'bg-primary hover:bg-primary/90',
       buttonText: 'Start ATS Analysis',
-      path: '/features/ats-analyzer',
+      path: '/ats-tool',
     },
     {
       icon: Target,

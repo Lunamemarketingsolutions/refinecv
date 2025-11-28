@@ -14,6 +14,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import MyCVs from './pages/MyCVs';
 import History from './pages/History';
+import ATSUpload from './pages/ats-tool/ATSUpload';
+import ATSAnalyzing from './pages/ats-tool/ATSAnalyzing';
+import ATSResults from './pages/ats-tool/ATSResults';
 
 function App() {
   return (
@@ -34,6 +37,9 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/my-cvs" element={<MyCVs />} />
             <Route path="/history" element={<History />} />
+            <Route path="/ats-tool" element={<ATSUpload />} />
+            <Route path="/ats-tool/analyzing/:uploadId" element={<ATSAnalyzing />} />
+            <Route path="/ats-tool/results/:analysisId" element={<ATSResults />} />
           </Routes>
         </AuthProvider>
       </Router>

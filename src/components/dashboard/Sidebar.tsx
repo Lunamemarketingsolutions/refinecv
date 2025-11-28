@@ -27,14 +27,19 @@ export default function Sidebar({ user, usageToday }: SidebarProps) {
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Eye, label: 'ATS Analyzer', path: '/features/ats-analyzer' },
+    { icon: Eye, label: 'ATS Analyzer', path: '/ats-tool' },
     { icon: Target, label: 'JD CV Match', path: '/features/jd-matcher' },
     { icon: Sparkles, label: 'CV Enhancer', path: '/features/cv-enhancer' },
     { icon: FileText, label: 'My CVs', path: '/my-cvs', divider: true },
     { icon: Clock, label: 'History', path: '/history' },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/ats-tool') {
+      return location.pathname.startsWith('/ats-tool');
+    }
+    return location.pathname === path;
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-60 bg-secondary flex flex-col">
