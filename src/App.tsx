@@ -23,6 +23,11 @@ import JDMatchResults from './pages/jd-match-tool/JDMatchResults';
 import EnhancerUpload from './pages/cv-enhancer-tool/EnhancerUpload';
 import EnhancerAnalyzing from './pages/cv-enhancer-tool/EnhancerAnalyzing';
 import EnhancerEditor from './pages/cv-enhancer-tool/EnhancerEditor';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CookiePolicy from './pages/CookiePolicy';
+import Disclaimer from './pages/Disclaimer';
+import RefundPolicy from './pages/RefundPolicy';
 
 function App() {
   return (
@@ -52,6 +57,11 @@ function App() {
             <Route path="/cv-enhancer" element={<EnhancerUpload />} />
             <Route path="/cv-enhancer/analyzing/:enhancementId" element={<EnhancerAnalyzing />} />
             <Route path="/cv-enhancer/editor/:enhancementId" element={<EnhancerEditor />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
           </Routes>
         </AuthProvider>
       </Router>

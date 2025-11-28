@@ -1,7 +1,8 @@
 import { FileText, Linkedin, Twitter, Instagram, Youtube } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Footer() {
+  const location = useLocation();
   return (
     <footer className="bg-secondary text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
@@ -55,7 +56,18 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4">Legal</h3>
             <ul className="space-y-3">
-              <li><a href="/privacy" className="text-gray-400 hover:text-primary transition-colors">Privacy Policy</a></li>
+              <li>
+                <Link
+                  to="/privacy-policy"
+                  className={`transition-colors ${
+                    location.pathname === '/privacy-policy'
+                      ? 'text-primary font-bold underline'
+                      : 'text-gray-400 hover:text-primary'
+                  }`}
+                >
+                  Privacy Policy
+                </Link>
+              </li>
               <li><a href="/terms" className="text-gray-400 hover:text-primary transition-colors">Terms & Conditions</a></li>
               <li><a href="/disclaimer" className="text-gray-400 hover:text-primary transition-colors">Disclaimer</a></li>
               <li><a href="/refund" className="text-gray-400 hover:text-primary transition-colors">Refund Policy</a></li>
