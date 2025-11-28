@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Target, Sparkles } from 'lucide-react';
+import { Eye, Target, Sparkles, Play } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { createATSSample, createJDMatchSample, createEnhancerSample } from '../../services/sampleDataService';
 
 interface FeatureCardsProps {
   featureUsage: {
@@ -11,6 +14,8 @@ interface FeatureCardsProps {
 
 export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loadingSample, setLoadingSample] = useState<string | null>(null);
 
   const features = [
     {
@@ -30,6 +35,10 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
       buttonBg: 'bg-primary hover:bg-primary/90',
       buttonText: 'Start ATS Analysis',
       path: '/ats-tool',
+      sampleType: 'ats' as const,
+      borderColor: 'border-primary',
+      textColor: 'text-primary',
+      hoverBg: 'hover:bg-primary/5',
     },
     {
       icon: Target,
@@ -48,6 +57,10 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
       buttonBg: 'bg-success hover:bg-success/90',
       buttonText: 'Start JD Match',
       path: '/jd-match-tool',
+      sampleType: 'jd' as const,
+      borderColor: 'border-success',
+      textColor: 'text-success',
+      hoverBg: 'hover:bg-success/5',
     },
     {
       icon: Sparkles,
@@ -66,8 +79,46 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
       buttonBg: 'bg-purple-600 hover:bg-purple-700',
       buttonText: 'Start Enhancement',
       path: '/cv-enhancer',
+      sampleType: 'enhancer' as const,
+      borderColor: 'border-purple-600',
+      textColor: 'text-purple-600',
+      hoverBg: 'hover:bg-purple-50',
     },
   ];
+
+  const handleShowSample = async (sampleType: 'ats' | 'jd' | 'enhancer', e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setLoadingSample(sampleType);
+
+      let sampleId: string;
+      let targetPath: string;
+
+      if (sampleType === 'ats') {
+        sampleId = await createATSSample(user.id);
+        targetPath = `/ats-tool/analyzing/${sampleId}`;
+      } else if (sampleType === 'jd') {
+        sampleId = await createJDMatchSample(user.id);
+        targetPath = `/jd-match-tool/analyzing/${sampleId}`;
+      } else {
+        sampleId = await createEnhancerSample(user.id);
+        targetPath = `/cv-enhancer/analyzing/${sampleId}`;
+      }
+
+      navigate(targetPath);
+    } catch (error) {
+      console.error('Error creating sample:', error);
+      alert('Failed to create sample. Please try again.');
+    } finally {
+      setLoadingSample(null);
+    }
+  };
 
   return (
     <div className="mb-8">
@@ -106,15 +157,35 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
               You've used this {feature.usageCount} times
             </div>
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(feature.path);
-              }}
-              className={`w-full ${feature.buttonBg} text-white px-6 py-3 rounded-lg font-semibold transition-all`}
-            >
-              {feature.buttonText} →
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(feature.path);
+                }}
+                className={`w-full ${feature.buttonBg} text-white px-6 py-3 rounded-lg font-semibold transition-all`}
+              >
+                {feature.buttonText} →
+              </button>
+
+              <button
+                onClick={(e) => handleShowSample(feature.sampleType, e)}
+                disabled={loadingSample === feature.sampleType}
+                className={`w-full ${feature.borderColor} ${feature.textColor} ${feature.hoverBg} border-2 bg-transparent px-6 py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {loadingSample === feature.sampleType ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading Sample...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span>Show Sample Result</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         ))}
       </div>

@@ -25,6 +25,7 @@ interface AnalysisResult {
   section_scores: any;
   created_at: string;
   cv_name?: string;
+  is_sample?: boolean;
 }
 
 export default function ATSResults() {
@@ -58,6 +59,7 @@ export default function ATSResults() {
       setAnalysis({
         ...data,
         cv_name: data.cv_uploads?.file_name || 'CV',
+        is_sample: data.is_sample || false,
       });
     } catch (err) {
       console.error('Error fetching analysis:', err);
@@ -107,6 +109,28 @@ export default function ATSResults() {
       />
 
       <main className="flex-1 ml-60">
+        {analysis.is_sample && (
+          <div className="bg-blue-50 border-b-2 border-blue-200 px-8 py-4">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Eye className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-blue-900 font-semibold">This is a sample result</p>
+                  <p className="text-blue-700 text-sm">Upload your own CV to get personalized analysis</p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/ats-tool')}
+                className="bg-primary text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Upload My CV →
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="sticky top-0 z-10 bg-white shadow-md border-b border-gray-200 px-8 py-4">
           <div className="flex items-center justify-between">
             <div>

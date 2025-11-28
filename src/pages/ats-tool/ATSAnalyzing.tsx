@@ -32,6 +32,7 @@ export default function ATSAnalyzing() {
   const [progress, setProgress] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [isSample, setIsSample] = useState(false);
 
   const totalDuration = analysisSteps.reduce((acc, step) => acc + step.duration, 0);
 
@@ -41,8 +42,27 @@ export default function ATSAnalyzing() {
       return;
     }
 
-    runAnalysis();
+    checkIfSampleAndRun();
   }, [uploadId, user, navigate]);
+
+  const checkIfSampleAndRun = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ats_analyses')
+        .select('is_sample')
+        .eq('id', uploadId)
+        .maybeSingle();
+
+      if (data) {
+        setIsSample(data.is_sample || false);
+      }
+
+      runAnalysis();
+    } catch (error) {
+      console.error('Error checking sample status:', error);
+      runAnalysis();
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -75,10 +95,12 @@ export default function ATSAnalyzing() {
 
     setAnalysisComplete(true);
 
-    const mockAnalysisResults = await createMockAnalysis();
+    if (!isSample) {
+      await createMockAnalysis();
+    }
 
     setTimeout(() => {
-      navigate(`/ats-tool/results/${mockAnalysisResults.id}`);
+      navigate(`/ats-tool/results/${uploadId}`);
     }, 2000);
   };
 
@@ -229,7 +251,15 @@ Jaipur Engineering College | 8.1 CGPA | 2015 - 2019
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-12 shadow-2xl max-w-3xl w-full">
+      <div className="bg-white rounded-2xl p-12 shadow-2xl max-w-3xl w-full relative">
+        {isSample && (
+          <div className="absolute top-4 right-4">
+            <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1.5 rounded-full">
+              Demo Mode
+            </span>
+          </div>
+        )}
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-secondary mb-2">
             Analyzing Your CV...
