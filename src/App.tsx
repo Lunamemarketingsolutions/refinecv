@@ -17,6 +17,9 @@ import History from './pages/History';
 import ATSUpload from './pages/ats-tool/ATSUpload';
 import ATSAnalyzing from './pages/ats-tool/ATSAnalyzing';
 import ATSResults from './pages/ats-tool/ATSResults';
+import JDMatchUpload from './pages/jd-match-tool/JDMatchUpload';
+import JDMatchAnalyzing from './pages/jd-match-tool/JDMatchAnalyzing';
+import JDMatchResults from './pages/jd-match-tool/JDMatchResults';
 
 function App() {
   return (
@@ -40,6 +43,9 @@ function App() {
             <Route path="/ats-tool" element={<ATSUpload />} />
             <Route path="/ats-tool/analyzing/:uploadId" element={<ATSAnalyzing />} />
             <Route path="/ats-tool/results/:analysisId" element={<ATSResults />} />
+            <Route path="/jd-match-tool" element={<JDMatchUpload />} />
+            <Route path="/jd-match-tool/analyzing/:matchId" element={<JDMatchAnalyzing />} />
+            <Route path="/jd-match-tool/results/:matchId" element={<JDMatchResults />} />
           </Routes>
         </AuthProvider>
       </Router>

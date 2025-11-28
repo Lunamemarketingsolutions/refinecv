@@ -47,7 +47,7 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
       usageColor: 'text-success',
       buttonBg: 'bg-success hover:bg-success/90',
       buttonText: 'Start JD Match',
-      path: '/features/jd-matcher',
+      path: '/jd-match-tool',
     },
     {
       icon: Sparkles,
@@ -96,7 +96,7 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
             <div className="space-y-2 mb-4">
               {feature.features.map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
-                  <span className="text-success">✓</span>
+                  <span className="text-success font-bold">✓</span>
                   <span>{item}</span>
                 </div>
               ))}

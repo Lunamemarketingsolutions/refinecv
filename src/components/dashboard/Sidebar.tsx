@@ -28,7 +28,7 @@ export default function Sidebar({ user, usageToday }: SidebarProps) {
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Eye, label: 'ATS Analyzer', path: '/ats-tool' },
-    { icon: Target, label: 'JD CV Match', path: '/features/jd-matcher' },
+    { icon: Target, label: 'JD CV Match', path: '/jd-match-tool' },
     { icon: Sparkles, label: 'CV Enhancer', path: '/features/cv-enhancer' },
     { icon: FileText, label: 'My CVs', path: '/my-cvs', divider: true },
     { icon: Clock, label: 'History', path: '/history' },
@@ -37,6 +37,9 @@ export default function Sidebar({ user, usageToday }: SidebarProps) {
   const isActive = (path: string) => {
     if (path === '/ats-tool') {
       return location.pathname.startsWith('/ats-tool');
+    }
+    if (path === '/jd-match-tool') {
+      return location.pathname.startsWith('/jd-match-tool');
     }
     return location.pathname === path;
   };
