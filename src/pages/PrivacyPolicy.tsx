@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, CheckCircle, XCircle, AlertTriangle, Info, Lock, Mail } from 'lucide-react';
 import Header from '../components/Header';
@@ -8,6 +9,10 @@ import PolicySection from '../components/privacy/PolicySection';
 import Callout from '../components/privacy/Callout';
 
 export default function PrivacyPolicy() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const sections = [
     { id: 'introduction', title: 'Introduction' },
     { id: 'information-collected', title: 'Information We Collect' },

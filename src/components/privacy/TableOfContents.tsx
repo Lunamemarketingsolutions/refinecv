@@ -15,23 +15,33 @@ export default function TableOfContents({ sections }: TableOfContentsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { rootMargin: '-100px 0px -80% 0px' }
-    );
+    let observer: IntersectionObserver | null = null;
 
-    sections.forEach((section) => {
-      const element = document.getElementById(section.id);
-      if (element) observer.observe(element);
-    });
+    const timer = setTimeout(() => {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActiveSection(entry.target.id);
+            }
+          });
+        },
+        {
+          rootMargin: '-120px 0px -70% 0px',
+          threshold: 0.1
+        }
+      );
 
-    return () => observer.disconnect();
+      sections.forEach((section) => {
+        const element = document.getElementById(section.id);
+        if (element && observer) observer.observe(element);
+      });
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (observer) observer.disconnect();
+    };
   }, [sections]);
 
   const scrollToSection = (sectionId: string) => {
