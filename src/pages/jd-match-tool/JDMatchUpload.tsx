@@ -6,6 +6,7 @@ import Sidebar from '../../components/dashboard/Sidebar';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { extractTextFromFile } from '../../utils/fileExtractor';
 
 type JDInputMode = 'paste' | 'upload';
 
@@ -48,6 +49,14 @@ export default function JDMatchUpload() {
 
       if (!user) {
         setCvError('Please log in to use this feature');
+        navigate('/login');
+        return;
+      }
+
+      const extractionResult = await extractTextFromFile(file);
+      if (!extractionResult.success) {
+        setCvError(extractionResult.error || 'Failed to extract text from file');
+        setCvUploading(false);
         return;
       }
 
@@ -56,7 +65,18 @@ export default function JDMatchUpload() {
         .from('cv-uploads')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        if (uploadError.message?.includes('row-level security')) {
+          setCvError('Permission denied. Please ensure you are logged in.');
+        } else if (uploadError.message?.includes('payload')) {
+          setCvError('File too large. Maximum size is 5MB.');
+        } else {
+          setCvError('Failed to upload file to storage. Please try again.');
+        }
+        setCvUploading(false);
+        return;
+      }
 
       const { data: cvUpload, error: cvError } = await supabase
         .from('cv_uploads')
@@ -65,17 +85,29 @@ export default function JDMatchUpload() {
           file_name: file.name,
           file_path: uploadData.path,
           file_size: file.size,
+          extracted_text: extractionResult.text,
         })
         .select()
-        .single();
+        .maybeSingle();
 
-      if (cvError) throw cvError;
+      if (cvError) {
+        console.error('Database insert error:', cvError);
+        setCvError('Failed to save CV information. Please try again.');
+        setCvUploading(false);
+        return;
+      }
+
+      if (!cvUpload) {
+        setCvError('Failed to create CV record. Please try again.');
+        setCvUploading(false);
+        return;
+      }
 
       setCvFile(file);
       setCvUploadId(cvUpload.id);
     } catch (err) {
       console.error('Upload error:', err);
-      setCvError('Failed to upload file. Please try again.');
+      setCvError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
     } finally {
       setCvUploading(false);
     }

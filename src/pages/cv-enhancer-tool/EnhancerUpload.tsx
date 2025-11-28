@@ -4,13 +4,14 @@ import { useDropzone } from 'react-dropzone';
 import { Sparkles, X, ChevronUp, ChevronDown } from 'lucide-react';
 import Sidebar from '../../components/dashboard/Sidebar';
 import { supabase } from '../../lib/supabase';
-import { extractTextFromPDF } from '../../utils/pdfExtractor';
+import { extractTextFromFile } from '../../utils/fileExtractor';
 
 export default function EnhancerUpload() {
   const navigate = useNavigate();
   const [cvFile, setCVFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showExamples, setShowExamples] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
@@ -30,23 +31,40 @@ export default function EnhancerUpload() {
     if (!cvFile) return;
 
     setUploading(true);
+    setError(null);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Please log in to continue');
+        setError('Please log in to continue');
         navigate('/login');
         return;
       }
 
-      const extractedText = await extractTextFromPDF(cvFile);
+      const extractionResult = await extractTextFromFile(cvFile);
+      if (!extractionResult.success) {
+        setError(extractionResult.error || 'Failed to extract text from file');
+        setUploading(false);
+        return;
+      }
 
       const filePath = `${user.id}/${Date.now()}_${cvFile.name}`;
       const { error: uploadError } = await supabase.storage
         .from('cv-uploads')
         .upload(filePath, cvFile);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        if (uploadError.message?.includes('row-level security')) {
+          setError('Permission denied. Please ensure you are logged in.');
+        } else if (uploadError.message?.includes('payload')) {
+          setError('File too large. Maximum size is 5MB.');
+        } else {
+          setError('Failed to upload file to storage. Please try again.');
+        }
+        setUploading(false);
+        return;
+      }
 
       const { data: cvUpload, error: cvError } = await supabase
         .from('cv_uploads')
@@ -55,30 +73,52 @@ export default function EnhancerUpload() {
           file_name: cvFile.name,
           file_path: filePath,
           file_size: cvFile.size,
-          extracted_text: extractedText
+          extracted_text: extractionResult.text
         })
         .select()
         .maybeSingle();
 
-      if (cvError) throw cvError;
+      if (cvError) {
+        console.error('Database insert error:', cvError);
+        setError('Failed to save CV information. Please try again.');
+        setUploading(false);
+        return;
+      }
+
+      if (!cvUpload) {
+        setError('Failed to create CV record. Please try again.');
+        setUploading(false);
+        return;
+      }
 
       const { data: enhancement, error: enhancementError } = await supabase
         .from('cv_enhancements')
         .insert({
           user_id: user.id,
-          cv_upload_id: cvUpload?.id,
-          original_text: extractedText,
+          cv_upload_id: cvUpload.id,
+          original_text: extractionResult.text,
           status: 'analyzing'
         })
         .select()
         .maybeSingle();
 
-      if (enhancementError) throw enhancementError;
+      if (enhancementError) {
+        console.error('Enhancement creation error:', enhancementError);
+        setError('Failed to create enhancement record. Please try again.');
+        setUploading(false);
+        return;
+      }
 
-      navigate(`/cv-enhancer/analyzing/${enhancement?.id}`);
+      if (!enhancement) {
+        setError('Failed to create enhancement. Please try again.');
+        setUploading(false);
+        return;
+      }
+
+      navigate(`/cv-enhancer/analyzing/${enhancement.id}`);
     } catch (error) {
       console.error('Error uploading CV:', error);
-      alert('Failed to upload CV. Please try again.');
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -157,6 +197,12 @@ export default function EnhancerUpload() {
                 </div>
               )}
             </div>
+
+            {error && (
+              <div className="mt-4 bg-error/10 border border-error/20 rounded-lg p-3 text-error text-sm text-center">
+                {error}
+              </div>
+            )}
 
             {cvFile && (
               <div className="mt-6 text-center">

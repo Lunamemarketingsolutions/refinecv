@@ -6,6 +6,7 @@ import Sidebar from '../../components/dashboard/Sidebar';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { extractTextFromFile } from '../../utils/fileExtractor';
 
 export default function ATSUpload() {
   const navigate = useNavigate();
@@ -35,6 +36,14 @@ export default function ATSUpload() {
 
       if (!user) {
         setError('Please log in to use this feature');
+        navigate('/login');
+        return;
+      }
+
+      const extractionResult = await extractTextFromFile(file);
+      if (!extractionResult.success) {
+        setError(extractionResult.error || 'Failed to extract text from file');
+        setUploading(false);
         return;
       }
 
@@ -44,7 +53,18 @@ export default function ATSUpload() {
         .from('cv-uploads')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        if (uploadError.message?.includes('row-level security')) {
+          setError('Permission denied. Please ensure you are logged in.');
+        } else if (uploadError.message?.includes('payload')) {
+          setError('File too large. Maximum size is 5MB.');
+        } else {
+          setError('Failed to upload file to storage. Please try again.');
+        }
+        setUploading(false);
+        return;
+      }
 
       const { data: cvUpload, error: cvError } = await supabase
         .from('cv_uploads')
@@ -53,16 +73,28 @@ export default function ATSUpload() {
           file_name: file.name,
           file_path: uploadData.path,
           file_size: file.size,
+          extracted_text: extractionResult.text,
         })
         .select()
-        .single();
+        .maybeSingle();
 
-      if (cvError) throw cvError;
+      if (cvError) {
+        console.error('Database insert error:', cvError);
+        setError('Failed to save CV information. Please try again.');
+        setUploading(false);
+        return;
+      }
+
+      if (!cvUpload) {
+        setError('Failed to create CV record. Please try again.');
+        setUploading(false);
+        return;
+      }
 
       navigate(`/ats-tool/analyzing/${cvUpload.id}`);
     } catch (err) {
       console.error('Upload error:', err);
-      setError('Failed to upload file. Please try again.');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
     } finally {
       setUploading(false);
     }
