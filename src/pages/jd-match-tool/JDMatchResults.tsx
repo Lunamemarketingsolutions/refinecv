@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Download, RefreshCw, Bookmark, ArrowLeft } from 'lucide-react';
+import { Download, RefreshCw, Bookmark, ArrowLeft, Eye } from 'lucide-react';
 import Sidebar from '../../components/dashboard/Sidebar';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { supabase } from '../../lib/supabase';
@@ -33,6 +33,7 @@ interface MatchResult {
   cv_name?: string;
   role?: string;
   company?: string;
+  is_sample?: boolean;
 }
 
 export default function JDMatchResults() {
@@ -66,8 +67,9 @@ export default function JDMatchResults() {
       setMatch({
         ...data,
         cv_name: data.cv_uploads?.file_name || 'CV',
-        role: data.jd_metadata?.detectedRole || 'Product Manager',
-        company: data.jd_metadata?.detectedCompany || 'Google',
+        role: data.jd_metadata?.role || data.jd_metadata?.detectedRole || 'Product Manager',
+        company: data.jd_metadata?.company || data.jd_metadata?.detectedCompany || 'Google',
+        is_sample: data.is_sample || false,
       });
     } catch (err) {
       console.error('Error fetching match:', err);
@@ -117,6 +119,32 @@ export default function JDMatchResults() {
       />
 
       <main className="flex-1 ml-60">
+        {match.is_sample && (
+          <div className="bg-blue-50 border-b-2 border-blue-200 px-8 py-4">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
+                  <Eye className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-blue-900 font-semibold text-base">
+                    Sample Results - Demo Mode
+                  </p>
+                  <p className="text-blue-700 text-sm">
+                    This is a demo using sample data. Upload your own CV to get personalized results.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/jd-match-tool')}
+                className="bg-success text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-success/90 transition-colors whitespace-nowrap"
+              >
+                Match My CV →
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="sticky top-0 z-10 bg-white shadow-md border-b border-gray-200 px-8 py-4">
           <div className="flex items-center justify-between">
             <div>

@@ -111,21 +111,25 @@ export default function ATSResults() {
       <main className="flex-1 ml-60">
         {analysis.is_sample && (
           <div className="bg-blue-50 border-b-2 border-blue-200 px-8 py-4">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-100 p-2 rounded-lg">
+                <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
                   <Eye className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-blue-900 font-semibold">This is a sample result</p>
-                  <p className="text-blue-700 text-sm">Upload your own CV to get personalized analysis</p>
+                  <p className="text-blue-900 font-semibold text-base">
+                    Sample Results - Demo Mode
+                  </p>
+                  <p className="text-blue-700 text-sm">
+                    This is a demo using sample data. Upload your own CV to get personalized results.
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => navigate('/ats-tool')}
-                className="bg-primary text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+                className="bg-primary text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
               >
-                Upload My CV →
+                Analyze My CV →
               </button>
             </div>
           </div>

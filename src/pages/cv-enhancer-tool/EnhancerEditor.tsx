@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import SectionProgressBar from '../../components/cv-enhancer-tool/SectionProgressBar';
 import BulletEditor from '../../components/cv-enhancer-tool/BulletEditor';
@@ -28,11 +29,13 @@ interface Bullet {
 
 export default function EnhancerEditor() {
   const { enhancementId } = useParams<{ enhancementId: string }>();
+  const navigate = useNavigate();
   const [sections, setSections] = useState<Section[]>([]);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [bullets, setBullets] = useState<Bullet[]>([]);
   const [overallScore, setOverallScore] = useState(72);
   const [loading, setLoading] = useState(true);
+  const [isSample, setIsSample] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -56,12 +59,13 @@ export default function EnhancerEditor() {
 
       const { data: enhancementData } = await supabase
         .from('cv_enhancements')
-        .select('overall_score_after')
+        .select('overall_score_after, is_sample')
         .eq('id', enhancementId)
         .maybeSingle();
 
       if (enhancementData) {
         setOverallScore(enhancementData.overall_score_after);
+        setIsSample(enhancementData.is_sample || false);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -130,6 +134,32 @@ export default function EnhancerEditor() {
 
   return (
     <div className="flex flex-col h-screen">
+      {isSample && (
+        <div className="bg-blue-50 border-b-2 border-blue-200 px-8 py-3">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
+                <Eye className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-blue-900 font-semibold text-base">
+                  Sample Results - Demo Mode
+                </p>
+                <p className="text-blue-700 text-sm">
+                  This is a demo using sample data. Upload your own CV to get personalized enhancements.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/cv-enhancer')}
+              className="bg-purple-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
+            >
+              Enhance My CV →
+            </button>
+          </div>
+        </div>
+      )}
+
       <SectionProgressBar
         sections={sections}
         currentSectionIndex={currentSectionIndex}

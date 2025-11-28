@@ -13,8 +13,14 @@ interface AnalysisStep {
   metric?: string;
 }
 
-const analysisSteps: AnalysisStep[] = [
-  { id: 1, name: 'Uploading CV', duration: 5000, message: 'Securely uploading your document...' },
+const getAnalysisSteps = (isSample: boolean): AnalysisStep[] => [
+  {
+    id: 1,
+    name: 'Uploading CV',
+    duration: 5000,
+    message: 'Securely uploading your document...',
+    metric: isSample ? 'Sample_CV_Naveen_Kumar.pdf | 1,847 words' : undefined
+  },
   { id: 2, name: 'Extracting Text from CV', duration: 7000, message: 'Reading content from your PDF/DOCX...', metric: '1,847 words extracted' },
   { id: 3, name: 'Parsing Contact Information', duration: 6000, message: 'Detecting name, email, phone, LinkedIn...', metric: '4 fields detected' },
   { id: 4, name: 'Analyzing Format & Layout', duration: 8000, message: 'Checking for tables, graphics, headers, special characters...', metric: 'Scanning 12 format elements' },
@@ -34,6 +40,7 @@ export default function ATSAnalyzing() {
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [isSample, setIsSample] = useState(false);
 
+  const analysisSteps = getAnalysisSteps(isSample);
   const totalDuration = analysisSteps.reduce((acc, step) => acc + step.duration, 0);
 
   useEffect(() => {
