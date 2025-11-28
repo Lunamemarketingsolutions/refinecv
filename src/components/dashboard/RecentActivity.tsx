@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface ActivityItem {
   id: string;
@@ -14,6 +14,8 @@ interface RecentActivityProps {
 }
 
 export default function RecentActivity({ activities }: RecentActivityProps) {
+  const navigate = useNavigate();
+
   const getToolBadge = (tool: string) => {
     const config = {
       ats_analyzer: {
@@ -83,7 +85,7 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
             Start analyzing your CV to see your activity here
           </p>
           <Link
-            to="/features/ats-analyzer"
+            to="/ats-tool"
             className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
           >
             Start Your First Analysis
@@ -141,11 +143,24 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <button className="text-primary hover:underline text-sm font-semibold">
+                      <button
+                        onClick={() => {
+                          const toolPath = activity.toolUsed === 'ats_analyzer' ? '/ats-tool/results'
+                            : activity.toolUsed === 'jd_matcher' ? '/jd-match-tool/results'
+                            : '/cv-enhancer/editor';
+                          navigate(`${toolPath}/${activity.id}`);
+                        }}
+                        className="text-primary hover:underline text-sm font-semibold"
+                      >
                         View Report
                       </button>
                       <span className="text-gray-300">|</span>
-                      <button className="text-primary hover:underline text-sm font-semibold">
+                      <button
+                        onClick={() => {
+                          console.log('Downloading report for:', activity.id);
+                        }}
+                        className="text-primary hover:underline text-sm font-semibold"
+                      >
                         Download
                       </button>
                     </div>

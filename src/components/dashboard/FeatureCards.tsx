@@ -107,6 +107,10 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
             </div>
 
             <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(feature.path);
+              }}
               className={`w-full ${feature.buttonBg} text-white px-6 py-3 rounded-lg font-semibold transition-all`}
             >
               {feature.buttonText} →
