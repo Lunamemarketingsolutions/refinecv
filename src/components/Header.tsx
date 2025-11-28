@@ -1,13 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { Menu, X, FileText, ChevronDown } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, FileText, ChevronDown, LogOut } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const closeTimeoutRef = useRef<number | null>(null);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,14 +78,29 @@ export default function Header() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            <a href="/login" className="text-secondary hover:text-primary transition-colors font-semibold">Login</a>
-            <a
-              href="/signup"
-              className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:scale-105 hover:shadow-lg transition-all"
-              data-cta="header-get-started"
-            >
-              {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : 'Get Started'}
-            </a>
+            {user ? (
+              <>
+                <Link to="/dashboard" className="text-secondary hover:text-primary transition-colors font-semibold">Dashboard</Link>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 text-secondary hover:text-primary transition-colors font-semibold"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="text-secondary hover:text-primary transition-colors font-semibold">Login</Link>
+                <Link
+                  to="/signup"
+                  className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:scale-105 hover:shadow-lg transition-all"
+                  data-cta="header-get-started"
+                >
+                  {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : 'Get Started'}
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -112,14 +135,28 @@ export default function Header() {
             <Link to="/pricing" className={`block text-secondary hover:text-primary font-semibold ${location.pathname === '/pricing' ? 'text-primary' : ''}`}>Pricing</Link>
             <Link to="/contact" className={`block text-secondary hover:text-primary font-semibold ${location.pathname === '/contact' ? 'text-primary' : ''}`}>Contact Us</Link>
             <div className="pt-4 border-t border-gray-200 space-y-3">
-              <a href="/login" className="block text-secondary hover:text-primary font-semibold">Login</a>
-              <a
-                href="/signup"
-                className="block bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-center"
-                data-cta="mobile-header-get-started"
-              >
-                {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : 'Get Started'}
-              </a>
+              {user ? (
+                <>
+                  <Link to="/dashboard" className="block text-secondary hover:text-primary font-semibold">Dashboard</Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="block w-full text-left text-secondary hover:text-primary font-semibold"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="block text-secondary hover:text-primary font-semibold">Login</Link>
+                  <Link
+                    to="/signup"
+                    className="block bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-center"
+                    data-cta="mobile-header-get-started"
+                  >
+                    {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : 'Get Started'}
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
