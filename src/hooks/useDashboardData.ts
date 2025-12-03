@@ -51,31 +51,40 @@ export function useDashboardData() {
         setLoading(true);
         setError(null);
 
+        // Try to get user profile, but don't fail if table doesn't exist
         const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('id', authUser.id)
           .maybeSingle();
 
-        if (profileError) throw profileError;
+        // If table doesn't exist, that's okay - we'll use defaults
+        if (profileError && !profileError.message.includes('does not exist')) {
+          console.warn('Profile fetch error (non-critical):', profileError);
+        }
 
         const userName = profile?.full_name || authUser.email?.split('@')[0] || 'User';
         const userPlan = profile?.plan_type || 'free';
 
+        // Try to fetch data, but use empty arrays if tables don't exist
         const { data: analyses, error: analysesError } = await supabase
           .from('cv_analyses')
           .select('*')
           .eq('user_id', authUser.id)
           .order('created_at', { ascending: false });
 
-        if (analysesError) throw analysesError;
+        if (analysesError && !analysesError.message.includes('does not exist')) {
+          console.warn('Analyses fetch error (non-critical):', analysesError);
+        }
 
         const { data: uploads, error: uploadsError } = await supabase
           .from('cv_uploads')
           .select('*')
           .eq('user_id', authUser.id);
 
-        if (uploadsError) throw uploadsError;
+        if (uploadsError && !uploadsError.message.includes('does not exist')) {
+          console.warn('Uploads fetch error (non-critical):', uploadsError);
+        }
 
         const today = new Date().toISOString().split('T')[0];
         const { data: todayUsage, error: usageError } = await supabase
@@ -84,7 +93,9 @@ export function useDashboardData() {
           .eq('user_id', authUser.id)
           .eq('date_only', today);
 
-        if (usageError) throw usageError;
+        if (usageError && !usageError.message.includes('does not exist')) {
+          console.warn('Usage tracking fetch error (non-critical):', usageError);
+        }
 
         const totalAnalyses = analyses?.length || 0;
         const atsAnalyses = analyses?.filter(a => a.tool_type === 'ats_analyzer' && a.ats_score) || [];

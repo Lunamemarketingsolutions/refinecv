@@ -21,3 +21,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+config.json
+
+# FAISS index files (large binary files)
+data/*.faiss
+data/eliteBulletsIndex.faiss
+
+# Training data - KEEP PRIVATE
+src/data/eliteBulletPoints.json
+data/eliteBulletsMetadata.json

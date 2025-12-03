@@ -78,7 +78,7 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
       usageColor: 'text-purple-600',
       buttonBg: 'bg-purple-600 hover:bg-purple-700',
       buttonText: 'Start Enhancement',
-      path: '/cv-enhancer',
+      path: '/cv-improviser',
       sampleType: 'enhancer' as const,
       borderColor: 'border-purple-600',
       textColor: 'text-purple-600',
@@ -107,8 +107,10 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
         sampleId = await createJDMatchSample(user.id);
         targetPath = `/jd-match-tool/analyzing/${sampleId}`;
       } else {
-        sampleId = await createEnhancerSample(user.id);
-        targetPath = `/cv-enhancer/analyzing/${sampleId}`;
+        // For CV Improviser, navigate directly (no sample creation needed)
+        setLoadingSample(null);
+        navigate('/cv-improviser');
+        return;
       }
 
       navigate(targetPath);

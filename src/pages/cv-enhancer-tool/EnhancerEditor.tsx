@@ -201,6 +201,7 @@ export default function EnhancerEditor() {
                 <BulletEditor
                   key={bullet.id}
                   bullet={bullet}
+                  sectionName={sections[currentSectionIndex]?.section_name}
                   onUpdate={(updates) => handleBulletUpdate(bullet.id, updates)}
                 />
               ))}

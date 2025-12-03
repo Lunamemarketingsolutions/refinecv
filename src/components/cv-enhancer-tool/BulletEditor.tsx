@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Sparkles, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { generateBulletSuggestions } from '../../services/bulletEnhancementService';
 
 interface Bullet {
   id: string;
@@ -12,38 +13,31 @@ interface Bullet {
 
 interface Props {
   bullet: Bullet;
+  sectionName?: string;
   onUpdate: (updates: Partial<Bullet>) => void;
 }
 
-export default function BulletEditor({ bullet, onUpdate }: Props) {
+export default function BulletEditor({ bullet, sectionName, onUpdate }: Props) {
   const [generating, setGenerating] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
-    setGenerating(true);
-    setTimeout(() => {
-      const mockSuggestions = [
-        {
-          text: `Led development of 3 mobile applications (2 Android, 1 iOS) serving 10,000+ users; architected reusable Java codebase improving code efficiency by 30%; managed cross-functional team of 5 developers; achieved 4.6/5 App Store rating with 95% crash-free rate`,
-          rating: 5,
-          improvements: ['Strong action verb: "Led"', 'Quantified impact: 10,000+ users, 30% efficiency', 'Added specifics: Team size (5), platforms', 'Clear outcome: App Store rating, crash-free rate']
-        },
-        {
-          text: `Designed and built 3 high-performing mobile applications (2 Android, 1 iOS) with 10,000+ downloads; led team of 5 in implementing reusable Java architecture; optimized app performance achieving 4.6/5 rating and 95% crash-free sessions`,
-          rating: 5,
-          improvements: ['"high-performing" emphasis', 'Downloads metric', 'Performance optimization highlighted', 'Production stability metrics']
-        },
-        {
-          text: `Spearheaded mobile app development initiative delivering 3 applications to 10,000+ users across Android and iOS platforms; established reusable Java framework reducing development time by 30%; coordinated 5-member team`,
-          rating: 5,
-          improvements: ['Executive-level verb: "Spearheaded"', 'Initiative framing shows leadership', 'Framework establishment', 'Team coordination emphasized']
-        }
-      ];
-      onUpdate({ suggestions: mockSuggestions });
+    try {
+      setGenerating(true);
+      setError(null);
+      const { suggestions } = await generateBulletSuggestions(bullet.current_text, sectionName);
+
+      onUpdate({ suggestions });
+      setCurrentSuggestionIndex(0);
       setShowSuggestions(true);
+    } catch (err) {
+      console.error('Failed to generate bullet suggestions', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate suggestions');
+    } finally {
       setGenerating(false);
-    }, 2000);
+    }
   };
 
   const handleApply = () => {
@@ -111,14 +105,21 @@ export default function BulletEditor({ bullet, onUpdate }: Props) {
       )}
 
       {!showSuggestions ? (
-        <button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="w-full bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          <Sparkles className="w-5 h-5" />
-          {generating ? 'Generating...' : 'Generate with AI'}
-        </button>
+        <>
+          <button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="w-full bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <Sparkles className="w-5 h-5" />
+            {generating ? 'Generating...' : 'Generate with AI'}
+          </button>
+          {error && (
+            <p className="text-sm text-error mt-3">
+              {error}
+            </p>
+          )}
+        </>
       ) : (
         <div className="bg-success/10 border-2 border-success rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
