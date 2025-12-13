@@ -70,6 +70,7 @@ export default function ATSUpload() {
         .from('cv_uploads')
         .insert({
           user_id: user.id,
+          session_id: user.id, // Legacy field, using user.id as fallback
           file_name: file.name,
           file_path: uploadData.path,
           file_size: file.size,

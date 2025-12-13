@@ -4,6 +4,9 @@ import { motion } from 'framer-motion';
 import { Loader2, Check } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { analyzePDFForATS } from '../../services/ats/pdfProcessor';
+import { saveResumeAnalysis } from '../../services/ats/resumeService';
+import { generateAllSuggestions } from '../../services/ats/aiSuggestionService';
 
 interface AnalysisStep {
   id: number;
@@ -80,181 +83,114 @@ export default function ATSAnalyzing() {
   }, []);
 
   const runAnalysis = async () => {
-    let timeElapsed = 0;
+    if (!user || !uploadId) return;
 
-    for (let i = 0; i < analysisSteps.length; i++) {
-      setCurrentStep(i);
+    try {
+      // Step 1: Load CV upload data
+      setCurrentStep(0);
+      const { data: cvUpload, error: cvError } = await supabase
+        .from('cv_uploads')
+        .select('*')
+        .eq('id', uploadId)
+        .eq('user_id', user.id)
+        .single();
 
-      const step = analysisSteps[i];
-      const stepStartTime = Date.now();
-
-      while (Date.now() - stepStartTime < step.duration) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        const stepProgress = ((Date.now() - stepStartTime) / step.duration) * 100;
-        const overallProgress = ((timeElapsed + (Date.now() - stepStartTime)) / totalDuration) * 100;
-        setProgress(Math.min(overallProgress, 100));
+      if (cvError || !cvUpload) {
+        throw new Error('Failed to load CV upload');
       }
 
-      timeElapsed += step.duration;
-      setCompletedSteps(prev => [...prev, i]);
-      setProgress(Math.min((timeElapsed / totalDuration) * 100, 100));
-    }
+      await simulateStep(0, 5000);
+      setCompletedSteps([0]);
+
+      // Step 2: Download file from storage
+      setCurrentStep(1);
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('cv-uploads')
+        .download(cvUpload.file_path);
+
+      if (downloadError || !fileData) {
+        throw new Error('Failed to download file');
+      }
+
+      const file = new File([fileData], cvUpload.file_name, { type: 'application/pdf' });
+      await simulateStep(1, 7000);
+      setCompletedSteps([0, 1]);
+
+      // Step 3: Extract text and analyze
+      setCurrentStep(2);
+      const analysis = await analyzePDFForATS(file);
+      await simulateStep(2, 6000);
+      setCompletedSteps([0, 1, 2]);
+
+      // Step 4: Analyze format
+      setCurrentStep(3);
+      await simulateStep(3, 8000);
+      setCompletedSteps([0, 1, 2, 3]);
+
+      // Step 5: Detect sections
+      setCurrentStep(4);
+      await simulateStep(4, 7000);
+      setCompletedSteps([0, 1, 2, 3, 4]);
+
+      // Step 6: Compare to ATS standards
+      setCurrentStep(5);
+      await simulateStep(5, 7000);
+      setCompletedSteps([0, 1, 2, 3, 4, 5]);
+
+      // Step 7: Save analysis and generate suggestions
+      setCurrentStep(6);
+      const savedResume = await saveResumeAnalysis({
+        fileName: cvUpload.file_name,
+        fileSize: cvUpload.file_size,
+        fileUrl: supabase.storage.from('cv-uploads').getPublicUrl(cvUpload.file_path).data.publicUrl,
+        storagePath: cvUpload.file_path,
+        analysis,
+        userId: user.id,
+        cvUploadId: uploadId
+      });
+
+      // Generate AI suggestions for problematic sections
+      if (analysis.detectedSections && analysis.detectedSections.length > 0) {
+        await generateAllSuggestions(analysis.detectedSections, uploadId, user.id);
+      }
+
+      await simulateStep(6, 5000);
+      setCompletedSteps([0, 1, 2, 3, 4, 5, 6]);
 
     setAnalysisComplete(true);
 
-    if (!isSample) {
-      await createMockAnalysis();
-    }
+      // Track usage
+      if (savedResume.analysis) {
+        await supabase.from('usage_tracking').insert({
+          user_id: user.id,
+          tool_type: 'ats_analyzer',
+          analysis_id: savedResume.analysis.id,
+        });
+      }
 
+      setTimeout(() => {
+        navigate(`/ats-tool/results/${savedResume.analysis?.id || uploadId}`);
+      }, 2000);
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setAnalysisComplete(true);
+      // Still navigate to results, but with error state
     setTimeout(() => {
       navigate(`/ats-tool/results/${uploadId}`);
     }, 2000);
+    }
   };
 
-  const createMockAnalysis = async () => {
-    if (!user || !uploadId) throw new Error('User or upload ID missing');
-
-    const { data, error } = await supabase
-      .from('ats_analyses')
-      .insert({
-        user_id: user.id,
-        cv_upload_id: uploadId,
-        overall_score: 78,
-        critical_issues: [
-          {
-            title: 'Contact Information Not Detected',
-            impact: 'Critical',
-            impactScore: -15,
-            problem: 'ATS cannot detect your name, phone number, or LinkedIn URL. These fields appear in your header/footer, which most ATS systems cannot parse.',
-            location: 'Header (top of page, inside a text box)',
-            atsView: '[No name detected]\n[No phone detected]\nEmail: naveen@example.com (✓ detected)\nLinkedIn: [Not detected]',
-            solution: '1. Move all contact information from header/footer to the main body of your CV\n2. Place contact info at the very top of the page in plain text (not in text boxes)\n3. Format as follows:\n   Naveen Kumar\n   Phone: +91 98765 43210\n   Email: naveen@example.com\n   LinkedIn: linkedin.com/in/naveenkumar',
-            timeToFix: '5 minutes',
-            scoreImpact: '+15%',
-          },
-          {
-            title: 'Skills Section Using Graphics',
-            impact: 'Critical',
-            impactScore: -10,
-            problem: 'Your skills are displayed as visual bar charts/graphics. ATS cannot read images or graphics, so it thinks you have ZERO skills listed.',
-            location: 'Skills section (page 1, right column)',
-            atsView: 'SKILLS:\n[Unable to parse graphic content]\n[No skills detected]',
-            solution: '1. Remove all skill bar charts, progress bars, or visual representations\n2. Convert to plain text list format\n3. Add proficiency levels in text\n\nExample Format:\nTECHNICAL SKILLS:\n- Python: Advanced (5 years, data analysis, ML models)\n- SQL: Intermediate (3 years, complex queries, optimization)',
-            timeToFix: '10 minutes',
-            scoreImpact: '+10%',
-          },
-          {
-            title: 'Two-Column Layout Detected',
-            impact: 'Critical',
-            impactScore: -8,
-            problem: 'Your CV uses a two-column table layout. ATS reads left-to-right across the entire page, which mixes content from both columns incorrectly.',
-            location: 'Entire CV (Education in left column, Work Experience in right column)',
-            atsView: 'IIM Bangalore... Worked at Amazon... MBA degree... Led team of 5... Graduated 2022... Increased sales...\n\n(Content is jumbled, chronology is broken, ATS cannot build proper timeline)',
-            solution: '1. Remove all table-based layouts\n2. Convert to single-column format\n3. Use clear section headings with proper spacing',
-            timeToFix: '20 minutes',
-            scoreImpact: '+8%',
-          },
-        ],
-        warnings: [
-          { title: 'Inconsistent Date Formatting', impactScore: -3, problem: 'Mixed date formats used', fix: 'Use consistent format: "Month YYYY - Month YYYY"', timeToFix: '5 minutes' },
-          { title: 'Section Heading Not Standard', impactScore: -2, problem: '"Relevant Experience" instead of "Work Experience"', fix: 'Use standard headings', timeToFix: '1 minute' },
-          { title: 'Special Characters Detected', impactScore: -2, problem: 'Bullets use non-standard symbols (►, ●, ◆)', fix: 'Use standard bullet points (•)', timeToFix: '3 minutes' },
-          { title: 'Custom Font Detected', impactScore: -2, problem: 'Using "Montserrat" font (not ATS-safe)', fix: 'Use Arial, Calibri, or Times New Roman', timeToFix: '2 minutes' },
-          { title: 'Hyperlinks Not Properly Formatted', impactScore: -1, problem: 'LinkedIn URL is hyperlinked', fix: 'Display as plain text', timeToFix: '1 minute' },
-        ],
-        passed_checks: [
-          'Email address detected correctly',
-          'Work experience section identified',
-          'Education section identified',
-          'Bullet points parsed correctly',
-          'Company names detected',
-          'Job titles detected',
-          'Degrees and institutions identified',
-          'Graduation years parsed',
-          'File format compatible (PDF)',
-          'File size under 5MB',
-          'No password protection',
-          'No embedded images in text',
-          'Standard page margins',
-          'Readable font size (11pt)',
-          'Consistent spacing',
-          'Section breaks clear',
-          'No overlapping text',
-          'Content within page boundaries',
-        ],
-        ats_text_extraction: `========================================
-EXTRACTED CONTENT (as ATS sees it)
-========================================
-
-[CONTACT INFORMATION]
-Name: [NOT DETECTED]
-Email: naveen@example.com
-Phone: [NOT DETECTED]
-LinkedIn: [NOT DETECTED]
-
-----------------------------------------
-
-[WORK EXPERIENCE SECTION - DETECTED ✓]
-
-Software Engineer
-Amazon India | Bangalore
-August 2022 - Present
-- Developed mobile applications
-- Maintained Java codebase
-- Led team of three persons
-
-Software Engineer Intern
-Walmart Global Tech | Bangalore
-January 2022 - July 2022
-- Built inventory management application
-
-----------------------------------------
-
-[EDUCATION SECTION - DETECTED ✓]
-
-ME Software Systems
-BITS Pilani | 8.33 CGPA | 2020 - 2022
-
-B Tech Information Technology
-Jaipur Engineering College | 8.1 CGPA | 2015 - 2019
-
-----------------------------------------
-
-[SKILLS SECTION - ERROR ✗]
-[Unable to parse graphic content]
-[No skills detected]
-
-========================================`,
-        section_scores: {
-          contactInfo: { score: 40, detected: 'partial', issues: 'Name, phone, LinkedIn not detected' },
-          workExperience: { score: 95, detected: 'yes', issues: 'All entries parsed correctly' },
-          education: { score: 100, detected: 'yes', issues: 'Perfect parsing' },
-          skills: { score: 0, detected: 'no', issues: 'Graphics not readable' },
-          projects: { score: 90, detected: 'yes', issues: 'Minor date format inconsistency' },
-        },
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await supabase.from('usage_tracking').insert({
-      user_id: user.id,
-      tool_type: 'ats_analyzer',
-      analysis_id: data.id,
-    });
-
-    await supabase.from('cv_analyses').insert({
-      user_id: user.id,
-      cv_upload_id: uploadId,
-      tool_type: 'ats_analyzer',
-      ats_score: 78,
-      cv_text: 'Sample CV text',
-      jd_text: '',
-    });
-
-    return data;
+  const simulateStep = async (stepIndex: number, duration: number) => {
+    const stepStartTime = Date.now();
+    while (Date.now() - stepStartTime < duration) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const stepProgress = ((Date.now() - stepStartTime) / duration) * 100;
+      const overallProgress = (stepIndex / analysisSteps.length) * 100 + (stepProgress / analysisSteps.length);
+      setProgress(Math.min(overallProgress, 100));
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">

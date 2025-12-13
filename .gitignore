@@ -27,6 +27,5 @@ config.json
 data/*.faiss
 data/eliteBulletsIndex.faiss
 
-# Training data - KEEP PRIVATE
 src/data/eliteBulletPoints.json
 data/eliteBulletsMetadata.json
