@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Clock } from 'lucide-react';
+import Sidebar from '../../components/dashboard/Sidebar';
+import { useDashboardData } from '../../hooks/useDashboardData';
 import { supabase } from '../../lib/supabase';
 
 export default function EnhancerAnalyzing() {
   const { enhancementId } = useParams<{ enhancementId: string }>();
   const navigate = useNavigate();
+  const { data } = useDashboardData();
   const [progress, setProgress] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -92,10 +95,28 @@ export default function EnhancerAnalyzing() {
     }
   };
 
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const totalUsageToday = data.usageToday.atsAnalyzer.used + data.usageToday.jdMatch.used + data.usageToday.cvEnhancer.used;
+  const totalLimit = data.usageToday.atsAnalyzer.limit + data.usageToday.jdMatch.limit + data.usageToday.cvEnhancer.limit;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex items-center justify-center p-8">
-      <div className="bg-white rounded-2xl p-12 shadow-2xl max-w-3xl w-full">
-        <div className="text-center mb-8">
+    <div className="min-h-screen bg-background flex">
+      <Sidebar
+        user={data.user}
+        usageToday={data.user.plan === 'free' ? { total: totalUsageToday, limit: totalLimit } : undefined}
+      />
+
+      <main className="flex-1 ml-60 p-8 lg:p-10">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl p-12 shadow-2xl">
+            <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-secondary mb-3">
             Analyzing Your CV Sections...
           </h1>
@@ -106,7 +127,7 @@ export default function EnhancerAnalyzing() {
 
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-2xl font-bold text-purple-600">{Math.round(progress)}%</span>
+            <span className="text-2xl font-bold text-primary">{Math.round(progress)}%</span>
             <span className="text-sm text-gray-500 flex items-center gap-1">
               <Clock className="w-4 h-4" />
               Elapsed: {elapsedTime}s / 30s
@@ -114,7 +135,7 @@ export default function EnhancerAnalyzing() {
           </div>
           <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-purple-600 to-primary transition-all duration-300"
+              className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -128,7 +149,7 @@ export default function EnhancerAnalyzing() {
                 step.status === 'complete'
                   ? 'border-success bg-success/5'
                   : step.status === 'analyzing'
-                  ? 'border-purple-600 bg-purple-50 animate-pulse'
+                  ? 'border-primary bg-primary/5 animate-pulse'
                   : 'border-gray-200'
               }`}
             >
@@ -137,7 +158,7 @@ export default function EnhancerAnalyzing() {
                   {step.status === 'complete' ? (
                     <CheckCircle className="w-6 h-6 text-success" />
                   ) : step.status === 'analyzing' ? (
-                    <div className="w-6 h-6 border-3 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-6 h-6 border-3 border-primary border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <div className="w-6 h-6 border-2 border-gray-300 rounded-full" />
                   )}
@@ -166,8 +187,8 @@ export default function EnhancerAnalyzing() {
         </div>
 
         {showScore && (
-          <div className="text-center p-8 bg-gradient-to-r from-purple-100 to-primary/10 rounded-2xl border-2 border-purple-200">
-            <div className="text-6xl font-black text-purple-600 mb-2">72%</div>
+          <div className="text-center p-8 bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl border-2 border-primary/20">
+            <div className="text-6xl font-black text-primary mb-2">72%</div>
             <div className="text-2xl text-amber-600 mb-3">⭐⭐⭐☆☆</div>
             <p className="text-lg font-semibold text-secondary mb-4">Your CV Score</p>
             <div className="bg-success/10 border-2 border-success rounded-lg p-4 mb-4">
@@ -181,7 +202,9 @@ export default function EnhancerAnalyzing() {
             <p className="text-gray-600 mt-2">21 enhancement opportunities found</p>
           </div>
         )}
-      </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

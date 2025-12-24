@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Download } from 'lucide-react';
+import Sidebar from '../components/dashboard/Sidebar';
+import { useDashboardData } from '../hooks/useDashboardData';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CVUploadSection from '../components/cv-improviser/CVUploadSection';
@@ -18,6 +20,7 @@ interface BulletPoint {
 }
 
 export default function CVImproviser() {
+  const { data } = useDashboardData();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [cvData, setCvData] = useState<ParsedCV | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -29,27 +32,6 @@ export default function CVImproviser() {
   const [currentBulletText, setCurrentBulletText] = useState('');
   const [updatedContent, setUpdatedContent] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
-
-  // Error display
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#F7F7FE] flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md">
-          <h2 className="text-xl font-bold text-red-600 mb-4">Error Loading CV Improviser</h2>
-          <p className="text-gray-700 mb-4">{error}</p>
-          <button
-            onClick={() => {
-              setError(null);
-              window.location.reload();
-            }}
-            className="bg-[#2782EA] text-white px-4 py-2 rounded-lg"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const handleUploadComplete = useCallback((file: File) => {
     setUploadedFile(file);
@@ -265,41 +247,90 @@ export default function CVImproviser() {
     }
   }, [cvData, bullets]);
 
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const totalUsageToday = data.usageToday.atsAnalyzer.used + data.usageToday.jdMatch.used + data.usageToday.cvEnhancer.used;
+  const totalLimit = data.usageToday.atsAnalyzer.limit + data.usageToday.jdMatch.limit + data.usageToday.cvEnhancer.limit;
+
+  // Error display
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex">
+        <Sidebar
+          user={data.user}
+          usageToday={data.user.plan === 'free' ? { total: totalUsageToday, limit: totalLimit } : undefined}
+        />
+        <main className="flex-1 ml-60 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-xl shadow-lg max-w-md">
+            <h2 className="text-xl font-bold text-red-600 mb-4">Error Loading CV Improviser</h2>
+            <p className="text-gray-700 mb-4">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                window.location.reload();
+              }}
+              className="bg-[#2782EA] text-white px-4 py-2 rounded-lg"
+            >
+              Reload Page
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // Show upload screen if no CV data
   if (!cvData) {
     return (
-      <div className="min-h-screen bg-[#F7F7FE]">
-        <Header />
-        <CVUploadSection
-          onUploadComplete={handleUploadComplete}
-          onAnalyze={handleAnalyze}
+      <div className="min-h-screen bg-background flex">
+        <Sidebar
+          user={data.user}
+          usageToday={data.user.plan === 'free' ? { total: totalUsageToday, limit: totalLimit } : undefined}
         />
-        <Footer />
+        <main className="flex-1 ml-60">
+          <Header />
+          <CVUploadSection
+            onUploadComplete={handleUploadComplete}
+            onAnalyze={handleAnalyze}
+          />
+          <Footer />
+        </main>
       </div>
     );
   }
 
   // Show two-panel workspace
   return (
-    <div className="min-h-screen bg-[#F7F7FE]" style={{ fontFamily: 'Lato, sans-serif' }}>
-      <Header />
-      
-      {/* Top Bar with Score and Download */}
-      <div className="bg-white border-b border-gray-200 px-8 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <ScoreDisplay score={cvScore} />
-          <button
-            onClick={handleDownloadPDF}
-            className="bg-[#2782EA] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#1e6bc7] transition-colors flex items-center gap-2"
-          >
-            <Download className="w-5 h-5" />
-            Download Updated CV
-          </button>
+    <div className="min-h-screen bg-background flex">
+      <Sidebar
+        user={data.user}
+        usageToday={data.user.plan === 'free' ? { total: totalUsageToday, limit: totalLimit } : undefined}
+      />
+      <main className="flex-1 ml-60" style={{ fontFamily: 'Lato, sans-serif' }}>
+        <Header />
+        
+        {/* Top Bar with Score and Download */}
+        <div className="bg-white border-b border-gray-200 px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <ScoreDisplay score={cvScore} />
+            <button
+              onClick={handleDownloadPDF}
+              className="bg-[#2782EA] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#1e6bc7] transition-colors flex items-center gap-2"
+            >
+              <Download className="w-5 h-5" />
+              Download Updated CV
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Two-Panel Workspace */}
-      <div className="flex h-[calc(100vh-200px)] max-w-7xl mx-auto px-8 py-6 gap-6">
+        {/* Two-Panel Workspace */}
+        <div className="flex h-[calc(100vh-200px)] max-w-7xl mx-auto px-8 py-6 gap-6">
         {/* Left Panel - Editing */}
         <div className="w-1/2 bg-white rounded-xl shadow-sm p-6 overflow-y-auto">
           <SectionTabs
@@ -353,18 +384,19 @@ export default function CVImproviser() {
         <div className="w-1/2">
           <CVPreview cvData={cvData} updatedContent={updatedContent} />
         </div>
-      </div>
+        </div>
 
-      {/* AI Suggestion Drawer */}
-      <AISuggestionDrawer
-        isOpen={aiDrawerOpen}
-        onClose={() => setAiDrawerOpen(false)}
-        bulletText={currentBulletText}
-        section={activeSection}
-        onApplySuggestion={handleApplySuggestion}
-      />
+        {/* AI Suggestion Drawer */}
+        <AISuggestionDrawer
+          isOpen={aiDrawerOpen}
+          onClose={() => setAiDrawerOpen(false)}
+          bulletText={currentBulletText}
+          section={activeSection}
+          onApplySuggestion={handleApplySuggestion}
+        />
 
-      <Footer />
+        <Footer />
+      </main>
     </div>
   );
 }

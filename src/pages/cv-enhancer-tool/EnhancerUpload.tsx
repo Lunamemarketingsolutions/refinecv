@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { Sparkles, X, ChevronUp, ChevronDown } from 'lucide-react';
 import Sidebar from '../../components/dashboard/Sidebar';
+import { useDashboardData } from '../../hooks/useDashboardData';
+import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { extractTextFromFile } from '../../utils/fileExtractor';
 
 export default function EnhancerUpload() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data } = useDashboardData();
   const [cvFile, setCVFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showExamples, setShowExamples] = useState(false);
@@ -70,6 +74,7 @@ export default function EnhancerUpload() {
         .from('cv_uploads')
         .insert({
           user_id: user.id,
+          session_id: user.id,
           file_name: cvFile.name,
           file_path: filePath,
           file_size: cvFile.size,
@@ -124,23 +129,39 @@ export default function EnhancerUpload() {
     }
   };
 
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const totalUsageToday = data.usageToday.atsAnalyzer.used + data.usageToday.jdMatch.used + data.usageToday.cvEnhancer.used;
+  const totalLimit = data.usageToday.atsAnalyzer.limit + data.usageToday.jdMatch.limit + data.usageToday.cvEnhancer.limit;
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar user={{ name: 'User', plan: 'free' }} />
+    <div className="min-h-screen bg-background flex">
+      <Sidebar
+        user={data.user}
+        usageToday={data.user.plan === 'free' ? { total: totalUsageToday, limit: totalLimit } : undefined}
+      />
 
-      <main className="flex-1 ml-60">
-        <div className="max-w-5xl mx-auto px-8 py-12">
-          <div className="mb-8">
-            <p className="text-sm text-gray-600 mb-4">
-              <span className="hover:text-primary cursor-pointer">Dashboard</span>
-              <span className="mx-2">&gt;</span>
-              <span>Instant CV Enhancer</span>
-            </p>
+      <main className="flex-1 ml-60 p-8 lg:p-10">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-6">
+            <Link to="/dashboard" className="text-gray-600 text-sm hover:text-primary">
+              Dashboard
+            </Link>
+            <span className="text-gray-400 mx-2">/</span>
+            <span className="text-secondary text-sm font-semibold">Instant CV Enhancer</span>
+          </div>
 
-            <h1 className="text-4xl font-bold text-secondary mb-3 text-center">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-black text-secondary mb-3">
               Instant CV Enhancer
             </h1>
-            <p className="text-lg text-gray-600 text-center">
+            <p className="text-lg text-gray-600">
               Transform weak bullets into powerful, achievement-focused statements with AI
             </p>
           </div>
@@ -149,15 +170,15 @@ export default function EnhancerUpload() {
             <div
               {...getRootProps()}
               className={`bg-white rounded-2xl p-12 border-2 border-dashed ${
-                isDragActive ? 'border-purple-600 border-solid bg-purple-50' : 'border-purple-400'
+                isDragActive ? 'border-primary border-solid bg-primary/5' : 'border-primary'
               } transition-all hover:border-solid hover:scale-[1.02] cursor-pointer shadow-lg`}
             >
               <input {...getInputProps()} />
 
               {!cvFile ? (
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-8 h-8 text-purple-600" />
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-8 h-8 text-primary" />
                   </div>
                   <h2 className="text-xl font-semibold text-secondary mb-2">
                     Upload Your CV to Enhance
@@ -166,7 +187,7 @@ export default function EnhancerUpload() {
                     Drag and drop your CV here
                   </p>
                   <div className="text-gray-400 text-sm my-3">— OR —</div>
-                  <button className="bg-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                  <button className="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
                     Browse Files
                   </button>
                   <p className="text-xs text-gray-500 italic mt-4">
@@ -209,7 +230,7 @@ export default function EnhancerUpload() {
                 <button
                   onClick={handleStartEnhancement}
                   disabled={uploading}
-                  className="bg-purple-600 text-white px-12 py-4 rounded-lg text-lg font-bold hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                  className="bg-primary text-white px-12 py-4 rounded-lg text-lg font-bold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                 >
                   {uploading ? 'Uploading...' : 'Start Enhancement →'}
                 </button>
@@ -223,7 +244,7 @@ export default function EnhancerUpload() {
             </h3>
             <div className="grid md:grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">⭐</span>
                 </div>
                 <h4 className="font-medium text-secondary mb-2">1-5 Star Rating</h4>
@@ -269,7 +290,7 @@ export default function EnhancerUpload() {
               onClick={() => setShowExamples(!showExamples)}
               className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
             >
-              <span className="text-base font-medium text-primary">
+              <span className="text-base font-medium text-secondary">
                 What CV Sections Get Enhanced?
               </span>
               {showExamples ? (

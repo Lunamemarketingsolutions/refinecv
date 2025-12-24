@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Eye } from 'lucide-react';
+import Sidebar from '../../components/dashboard/Sidebar';
+import { useDashboardData } from '../../hooks/useDashboardData';
 import { supabase } from '../../lib/supabase';
 import SectionProgressBar from '../../components/cv-enhancer-tool/SectionProgressBar';
 import BulletEditor from '../../components/cv-enhancer-tool/BulletEditor';
@@ -30,6 +32,7 @@ interface Bullet {
 export default function EnhancerEditor() {
   const { enhancementId } = useParams<{ enhancementId: string }>();
   const navigate = useNavigate();
+  const { data } = useDashboardData();
   const [sections, setSections] = useState<Section[]>([]);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [bullets, setBullets] = useState<Bullet[]>([]);
@@ -124,16 +127,25 @@ export default function EnhancerEditor() {
     }
   };
 
-  if (loading) {
+  if (loading || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
+  const totalUsageToday = data.usageToday.atsAnalyzer.used + data.usageToday.jdMatch.used + data.usageToday.cvEnhancer.used;
+  const totalLimit = data.usageToday.atsAnalyzer.limit + data.usageToday.jdMatch.limit + data.usageToday.cvEnhancer.limit;
+
   return (
-    <div className="flex flex-col h-screen">
+    <div className="min-h-screen bg-background flex">
+      <Sidebar
+        user={data.user}
+        usageToday={data.user.plan === 'free' ? { total: totalUsageToday, limit: totalLimit } : undefined}
+      />
+
+      <div className="flex flex-col flex-1 ml-60">
       {isSample && (
         <div className="bg-blue-50 border-b-2 border-blue-200 px-8 py-3">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -152,7 +164,7 @@ export default function EnhancerEditor() {
             </div>
             <button
               onClick={() => navigate('/cv-enhancer')}
-              className="bg-purple-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
+              className="bg-primary text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap"
             >
               Enhance My CV →
             </button>
@@ -175,7 +187,7 @@ export default function EnhancerEditor() {
                 <select
                   value={currentSectionIndex}
                   onChange={(e) => setCurrentSectionIndex(Number(e.target.value))}
-                  className="w-full p-3 mb-4 border-2 border-gray-300 rounded-lg text-lg font-semibold focus:border-purple-600 focus:outline-none"
+                  className="w-full p-3 mb-4 border-2 border-gray-300 rounded-lg text-lg font-semibold focus:border-primary focus:outline-none"
                 >
                   {sections.map((section, idx) => (
                     <option key={section.id} value={idx}>
@@ -210,6 +222,7 @@ export default function EnhancerEditor() {
         </div>
 
         <CVPreview sections={sections} bullets={bullets} />
+      </div>
       </div>
     </div>
   );

@@ -104,3 +104,4 @@ export default function FileUpload({ onFileSelect, selectedFile, onClear }: File
   );
 }
 
+

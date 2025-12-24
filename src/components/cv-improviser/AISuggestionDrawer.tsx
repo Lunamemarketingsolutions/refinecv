@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, ArrowRight, Send, Loader2, Sparkles } from 'lucide-react';
 import { generateBulletSuggestions } from '../../services/bulletEnhancementService';
 
@@ -31,6 +31,40 @@ export default function AISuggestionDrawer({
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+  
+  // Track previous bulletText and section to detect changes
+  const prevBulletTextRef = useRef<string>('');
+  const prevSectionRef = useRef<string>('');
+
+  // Reset drawer state when bulletText or section changes (new CV point selected)
+  useEffect(() => {
+    if (isOpen && (bulletText !== prevBulletTextRef.current || section !== prevSectionRef.current)) {
+      // Reset all state for the new bullet point
+      setSuggestions([]);
+      setChatMessages([]);
+      setChatInput('');
+      setCurrentSuggestionIndex(0);
+      setIsGenerating(false);
+      setIsChatLoading(false);
+      
+      // Update refs
+      prevBulletTextRef.current = bulletText;
+      prevSectionRef.current = section;
+    }
+  }, [isOpen, bulletText, section]);
+
+  // Also reset when drawer closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset state when drawer closes
+      setSuggestions([]);
+      setChatMessages([]);
+      setChatInput('');
+      setCurrentSuggestionIndex(0);
+      setIsGenerating(false);
+      setIsChatLoading(false);
+    }
+  }, [isOpen]);
 
   const handleGenerate = async () => {
     if (!bulletText.trim()) {
@@ -39,12 +73,16 @@ export default function AISuggestionDrawer({
     }
     setIsGenerating(true);
     try {
+      console.log('Generating suggestions for:', { bulletText, section });
       const result = await generateBulletSuggestions(bulletText, section);
+      console.log('Suggestions received:', result);
       setSuggestions(result.suggestions || []);
       setCurrentSuggestionIndex(0);
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      alert('Failed to generate suggestions. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate suggestions. Please try again.';
+      console.error('Full error details:', error);
+      alert(`Failed to generate suggestions: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
@@ -61,14 +99,19 @@ export default function AISuggestionDrawer({
 
     try {
       // Call AI with user prompt
+      console.log('Chat request:', { bulletText, section, userMessage });
       const result = await generateBulletSuggestions(bulletText, section, userMessage);
+      console.log('Chat response:', result);
       const aiResponse = result.suggestions?.[0]?.text || 'I can help you improve this bullet point.';
       setChatMessages(prev => [...prev, { role: 'ai', content: aiResponse }]);
       setSuggestions(result.suggestions || []);
     } catch (error) {
+      console.error('Chat error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Full error details:', error);
       setChatMessages(prev => [...prev, { 
         role: 'ai', 
-        content: 'Sorry, I encountered an error. Please try again.' 
+        content: `Sorry, I encountered an error: ${errorMessage}. Please check the console for details.` 
       }]);
     } finally {
       setIsChatLoading(false);
@@ -81,16 +124,24 @@ export default function AISuggestionDrawer({
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-end">
       <div className="bg-white h-full w-full max-w-2xl shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-[#0F1C2A]" style={{ fontFamily: 'Lato, sans-serif' }}>
-            AI Suggestions
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-2xl font-bold text-[#0F1C2A]" style={{ fontFamily: 'Lato, sans-serif' }}>
+              AI Suggestions
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          {bulletText && (
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+              <p className="text-xs font-semibold text-gray-500 mb-1">Current CV Point ({section}):</p>
+              <p className="text-sm text-gray-700 line-clamp-2">{bulletText}</p>
+            </div>
+          )}
         </div>
 
         {/* Content */}

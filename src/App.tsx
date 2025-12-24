@@ -21,6 +21,7 @@ import ATSResults from './pages/ats-tool/ATSResults';
 import JDMatchUpload from './pages/jd-match-tool/JDMatchUpload';
 import JDMatchAnalyzing from './pages/jd-match-tool/JDMatchAnalyzing';
 import JDMatchResults from './pages/jd-match-tool/JDMatchResults';
+import JDMatcherTool from './pages/jd-match-tool/JDMatcherTool';
 import EnhancerUpload from './pages/cv-enhancer-tool/EnhancerUpload';
 import EnhancerAnalyzing from './pages/cv-enhancer-tool/EnhancerAnalyzing';
 import EnhancerEditor from './pages/cv-enhancer-tool/EnhancerEditor';
@@ -55,9 +56,10 @@ function App() {
             <Route path="/ats-tool/upload" element={<ATSUpload />} />
             <Route path="/ats-tool/analyzing/:uploadId" element={<ATSAnalyzing />} />
             <Route path="/ats-tool/results/:analysisId" element={<ATSResults />} />
-            <Route path="/jd-match-tool" element={<JDMatchUpload />} />
-            <Route path="/jd-match-tool/analyzing/:matchId" element={<JDMatchAnalyzing />} />
-            <Route path="/jd-match-tool/results/:matchId" element={<JDMatchResults />} />
+            <Route path="/jd-match-tool" element={<JDMatcherTool />} />
+            <Route path="/jd-match-tool/old/upload" element={<JDMatchUpload />} />
+            <Route path="/jd-match-tool/old/analyzing/:matchId" element={<JDMatchAnalyzing />} />
+            <Route path="/jd-match-tool/old/results/:matchId" element={<JDMatchResults />} />
             <Route path="/cv-enhancer" element={<EnhancerUpload />} />
             <Route path="/cv-enhancer/analyzing/:enhancementId" element={<EnhancerAnalyzing />} />
             <Route path="/cv-enhancer/editor/:enhancementId" element={<EnhancerEditor />} />
