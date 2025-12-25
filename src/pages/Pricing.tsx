@@ -1,16 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Check, X, Target, Clock, TrendingUp, Shield, RefreshCw, Award,
-  Building, ChevronDown, Infinity
+  Building, ChevronDown, Infinity, AlertCircle
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Pricing() {
+  const location = useLocation();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [applications, setApplications] = useState(10);
   const [ctc, setCTC] = useState(12);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
+  const [toolName, setToolName] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if user was redirected due to usage limit
+    if (location.state) {
+      const state = location.state as { message?: string; toolName?: string };
+      if (state.message) {
+        setLimitMessage(state.message);
+        setToolName(state.toolName || null);
+      }
+    }
+  }, [location]);
 
   const timeSaved = (applications * 3) - (applications * 0.25);
   const monthlySavings = ctc / 12;
@@ -149,6 +164,28 @@ export default function Pricing() {
       <Header />
 
       <main>
+        {/* Usage Limit Banner */}
+        {limitMessage && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-20 mx-4 sm:mx-6 lg:mx-8 rounded-r-lg shadow-sm">
+            <div className="flex items-start">
+              <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5 mr-3" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-yellow-800 mb-1">
+                  Usage Limit Reached
+                </h3>
+                <p className="text-yellow-700">
+                  {limitMessage}
+                </p>
+                {toolName && (
+                  <p className="text-sm text-yellow-600 mt-2">
+                    Upgrade to premium to continue using {toolName} and get unlimited access to all features.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Hero Section */}
         <section className="pt-32 pb-16 bg-gradient-to-b from-primary/10 to-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -574,7 +611,7 @@ export default function Pricing() {
             </button>
 
             <p className="text-sm opacity-80">
-              Email: support.refinecv@gmail.com
+              Email: refinecvhelp@gmail.com
             </p>
           </div>
         </section>

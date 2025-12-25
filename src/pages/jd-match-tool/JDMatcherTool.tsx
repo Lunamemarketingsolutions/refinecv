@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/dashboard/Sidebar';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -10,6 +12,7 @@ import ResumeTailoring from '../../components/jd-matcher-tool/ResumeTailoring';
 import ResumePreview from '../../components/jd-matcher-tool/ResumePreview';
 import { analyzeResumeWithAI } from '../../services/jd-matcher/aiService';
 import { saveJDMatchAnalysis, updateJDMatchAnalysis } from '../../services/jd-matcher/jdMatchService';
+import { checkUsageLimit, getToolDisplayName } from '../../services/usageLimitService';
 import type { ResumeData, Recommendation, JDMatchAnalysis } from '../../types/jdMatcher';
 
 type ViewState = 'upload' | 'analyzing' | 'tailoring' | 'preview';
@@ -17,6 +20,7 @@ type ViewState = 'upload' | 'analyzing' | 'tailoring' | 'preview';
 export default function JDMatcherTool() {
   const { user } = useAuth();
   const { data } = useDashboardData();
+  const navigate = useNavigate();
   const [view, setView] = useState<ViewState>('upload');
   const [cvText, setCvText] = useState<string>('');
   const [jdText, setJdText] = useState<string>('');
@@ -30,6 +34,19 @@ export default function JDMatcherTool() {
   const handleFilesReady = useCallback(async (cv: string, jd: string) => {
     if (!user) {
       setError('Please log in to use this feature');
+      return;
+    }
+
+    // Check usage limit for free plan users
+    const limitCheck = await checkUsageLimit(user.id, 'jd_matcher', 3);
+    if (!limitCheck.allowed) {
+      // Redirect to pricing page with message
+      navigate('/pricing', { 
+        state: { 
+          message: limitCheck.reason || `You've reached the limit for ${getToolDisplayName('jd_matcher')}. Upgrade to premium for unlimited access.`,
+          toolName: getToolDisplayName('jd_matcher')
+        } 
+      });
       return;
     }
 
@@ -145,7 +162,8 @@ export default function JDMatcherTool() {
         usageToday={data.user.plan === 'free' ? { total: totalUsageToday, limit: totalLimit } : undefined}
       />
 
-      <main className="flex-1 ml-60">
+      <main className="flex-1 ml-60" style={{ fontFamily: 'Lato, sans-serif' }}>
+        <Header />
         {view === 'upload' && (
           <div className="p-8 lg:p-10">
             <div className="max-w-6xl mx-auto">
@@ -189,6 +207,7 @@ export default function JDMatcherTool() {
             onBack={recommendations.length > 0 ? handleBackToTailoring : undefined}
           />
         )}
+        <Footer />
       </main>
     </div>
   );

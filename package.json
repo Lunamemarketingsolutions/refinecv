@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "build:faiss": "tsx scripts/buildFaissIndex.ts"
+    "build:faiss": "tsx scripts/buildFaissIndex.ts",
+    "export:users": "tsx scripts/export-users.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

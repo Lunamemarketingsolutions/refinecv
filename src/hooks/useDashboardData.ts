@@ -52,7 +52,8 @@ export function useDashboardData() {
         setError(null);
 
         // Try to get user profile, but don't fail if table doesn't exist
-        const { data: profile, error: profileError } = await supabase
+        let profile = null;
+        const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('id', authUser.id)
@@ -61,6 +62,31 @@ export function useDashboardData() {
         // If table doesn't exist, that's okay - we'll use defaults
         if (profileError && !profileError.message.includes('does not exist')) {
           console.warn('Profile fetch error (non-critical):', profileError);
+        } else {
+          profile = profileData;
+        }
+
+        // If profile doesn't exist, create it (fallback if trigger didn't fire)
+        if (!profile && !profileError) {
+          try {
+            const { data: newProfile, error: createError } = await supabase
+              .from('user_profiles')
+              .insert({
+                id: authUser.id,
+                full_name: authUser.email?.split('@')[0] || 'User',
+                plan_type: 'free',
+              })
+              .select()
+              .single();
+
+            if (!createError && newProfile) {
+              profile = newProfile;
+            } else if (createError) {
+              console.warn('Profile creation error (non-critical):', createError);
+            }
+          } catch (createErr) {
+            console.warn('Profile creation exception (non-critical):', createErr);
+          }
         }
 
         const userName = profile?.full_name || authUser.email?.split('@')[0] || 'User';
@@ -110,35 +136,61 @@ export function useDashboardData() {
         const jdUsageToday = todayUsage?.filter(u => u.tool_type === 'jd_matcher').length || 0;
         const cvEnhancerUsageToday = todayUsage?.filter(u => u.tool_type === 'cv_enhancer').length || 0;
 
-        const atsAnalyzerCount = analyses?.filter(a => a.tool_type === 'ats_analyzer').length || 0;
-        const jdMatchCount = analyses?.filter(a => a.tool_type === 'jd_matcher').length || 0;
-        const cvEnhancerCount = analyses?.filter(a => a.tool_type === 'cv_enhancer').length || 0;
+        // Get feature usage counts from usage_tracking table (more accurate)
+        const { data: allUsage, error: allUsageError } = await supabase
+          .from('usage_tracking')
+          .select('tool_type')
+          .eq('user_id', authUser.id);
 
-        const recentActivity = analyses?.slice(0, 5).map(analysis => {
-          const upload = uploads?.find(u => u.id === analysis.cv_upload_id);
+        if (allUsageError && !allUsageError.message.includes('does not exist')) {
+          console.warn('All usage tracking fetch error (non-critical):', allUsageError);
+        }
+
+        const atsAnalyzerCount = allUsage?.filter(u => u.tool_type === 'ats_analyzer').length || 0;
+        const jdMatchCount = allUsage?.filter(u => u.tool_type === 'jd_matcher').length || 0;
+        const cvEnhancerCount = allUsage?.filter(u => u.tool_type === 'cv_enhancer').length || 0;
+
+        // Get recent activity from usage_tracking joined with cv_uploads
+        const { data: recentUsage, error: recentUsageError } = await supabase
+          .from('usage_tracking')
+          .select(`
+            id,
+            tool_type,
+            created_at,
+            cv_uploads!inner(file_name)
+          `)
+          .eq('user_id', authUser.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (recentUsageError && !recentUsageError.message.includes('does not exist')) {
+          console.warn('Recent usage tracking fetch error (non-critical):', recentUsageError);
+        }
+
+        const recentActivity = (recentUsage || []).map((usage: any) => {
           let scoreType: 'ats' | 'match' | 'rating' = 'ats';
           let score: number | string = 0;
 
-          if (analysis.tool_type === 'ats_analyzer') {
+          if (usage.tool_type === 'ats_analyzer') {
             scoreType = 'ats';
-            score = analysis.ats_score || 0;
-          } else if (analysis.tool_type === 'jd_matcher') {
+            score = 0; // We don't have score in usage_tracking, could join with ats_analyses if needed
+          } else if (usage.tool_type === 'jd_matcher') {
             scoreType = 'match';
-            score = analysis.match_score || 0;
+            score = 0; // We don't have score in usage_tracking, could join with jd_matches if needed
           } else {
             scoreType = 'rating';
             score = '4.5';
           }
 
           return {
-            id: analysis.id,
-            cvName: upload?.file_name || 'Unnamed CV',
-            toolUsed: analysis.tool_type || 'ats_analyzer',
-            date: analysis.created_at,
+            id: usage.id,
+            cvName: usage.cv_uploads?.file_name || 'Unnamed CV',
+            toolUsed: usage.tool_type || 'ats_analyzer',
+            date: usage.created_at,
             score,
             scoreType,
           };
-        }) || [];
+        });
 
         const dashboardData: DashboardData = {
           user: {

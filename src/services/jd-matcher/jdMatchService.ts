@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { trackFeatureUsage } from '../usageTrackingService';
 import type { JDMatchAnalysis, JDMatchRecord, Recommendation } from '../../types/jdMatcher';
 
 export interface SaveJDMatchParams {
@@ -32,6 +33,19 @@ export async function saveJDMatchAnalysis(params: SaveJDMatchParams): Promise<JD
   if (error) {
     console.error('Error saving JD match:', error);
     throw new Error(`Failed to save JD match analysis: ${error.message}`);
+  }
+
+  // Track feature usage (non-blocking)
+  // Note: Don't pass data.id as analysisId because it references jd_matches,
+  // but the foreign key constraint expects cv_analyses. We use cv_upload_id instead.
+  // Only track if cvUploadId exists (it can be null)
+  if (cvUploadId) {
+    trackFeatureUsage(userId, 'jd_matcher', cvUploadId).catch((err) => {
+      console.error('Failed to track JD matcher usage:', err);
+      // Don't throw - tracking failure shouldn't break the upload flow
+    });
+  } else {
+    console.warn('⚠️ JD Match: cvUploadId is null, skipping usage tracking');
   }
 
   return data as JDMatchRecord;

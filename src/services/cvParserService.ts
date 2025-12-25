@@ -102,6 +102,10 @@ function findSimilarSection(sectionName: string, existingSections: string[]): st
   
   for (const existing of existingSections) {
     const existingNormalized = normalizeSectionName(existing);
+    // Check for exact match (case-insensitive) first, then similarity
+    if (existingNormalized.toLowerCase() === normalized.toLowerCase()) {
+      return existing;
+    }
     if (similarity(normalized, existingNormalized) >= SIMILARITY_THRESHOLD) {
       return existing;
     }
@@ -111,7 +115,19 @@ function findSimilarSection(sectionName: string, existingSections: string[]): st
 }
 
 function parseCVText(text: string): ParsedCV {
-  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  // Normalize line breaks and clean up text
+  // Replace multiple spaces with single space, but preserve line breaks
+  const normalizedText = text
+    .replace(/\r\n/g, '\n') // Normalize Windows line breaks
+    .replace(/\r/g, '\n')   // Normalize Mac line breaks
+    .replace(/[ \t]+/g, ' ') // Replace multiple spaces/tabs with single space
+    .replace(/\n{3,}/g, '\n\n'); // Replace multiple newlines with double newline
+  
+  const lines = normalizedText
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  
   const sections: ParsedSection[] = [];
   const content: Record<string, string[] | Record<string, string>> = {};
   let currentSection: ParsedSection | null = null;
@@ -192,8 +208,27 @@ function parseCVText(text: string): ParsedCV {
     }
   }
   
-  // Convert to content format
+  // Deduplicate sections by name (merge bullets if duplicates exist)
+  const uniqueSections: ParsedSection[] = [];
+  const sectionMap = new Map<string, ParsedSection>();
+  
   for (const section of sections) {
+    const normalizedName = normalizeSectionName(section.name);
+    const existing = sectionMap.get(normalizedName);
+    
+    if (existing) {
+      // Merge bullets from duplicate section
+      existing.bullets.push(...section.bullets);
+    } else {
+      // Create new entry with normalized name
+      const uniqueSection = { ...section, name: normalizedName };
+      sectionMap.set(normalizedName, uniqueSection);
+      uniqueSections.push(uniqueSection);
+    }
+  }
+  
+  // Convert to content format using unique sections
+  for (const section of uniqueSections) {
     if (section.name === 'Personal Information') {
       // Parse personal info into structured format
       const personalInfo: Record<string, string> = {};
@@ -227,10 +262,10 @@ function parseCVText(text: string): ParsedCV {
   }
   
   // Generate HTML preview
-  const rawHtml = generateHTMLPreview(sections, content);
+  const rawHtml = generateHTMLPreview(uniqueSections, content);
   
   return {
-    sections: sections.map(s => s.name),
+    sections: uniqueSections.map(s => s.name),
     content,
     rawHtml,
     rawText: text,

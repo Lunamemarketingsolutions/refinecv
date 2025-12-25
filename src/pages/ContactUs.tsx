@@ -27,8 +27,8 @@ export default function ContactUs() {
     {
       icon: Mail,
       label: 'Email Us',
-      value: 'support.refinecv@gmail.com',
-      href: 'mailto:support.refinecv@gmail.com',
+      value: 'refinecvhelp@gmail.com',
+      href: 'mailto:refinecvhelp@gmail.com',
     },
     {
       icon: Phone,
@@ -102,15 +102,15 @@ export default function ContactUs() {
     },
     {
       question: 'Can I get a demo before signing up?',
-      answer: 'Absolutely! Click the "Try a Demo" button on our homepage, or email us at support.refinecv@gmail.com to schedule a personalized 15-minute demo with our team.',
+      answer: 'Absolutely! Click the "Try a Demo" button on our homepage, or email us at refinecvhelp@gmail.com to schedule a personalized 15-minute demo with our team.',
     },
     {
       question: 'I\'m having technical issues. How do I report them?',
-      answer: 'Please email support.refinecv@gmail.com with: (1) A description of the issue, (2) Screenshots if applicable, (3) Your browser and device type. We\'ll investigate and respond within 4 hours.',
+      answer: 'Please email refinecvhelp@gmail.com with: (1) A description of the issue, (2) Screenshots if applicable, (3) Your browser and device type. We\'ll investigate and respond within 4 hours.',
     },
     {
       question: 'Do you offer student discounts or bulk pricing?',
-      answer: 'Yes! We offer special pricing for college groups, placement cells, and student clubs. Contact Shweta at support.refinecv@gmail.com to discuss custom plans.',
+      answer: 'Yes! We offer special pricing for college groups, placement cells, and student clubs. Contact Shweta at refinecvhelp@gmail.com to discuss custom plans.',
     },
     {
       question: 'How can I request a new feature?',
@@ -505,10 +505,10 @@ export default function ContactUs() {
                       <div>
                         <div className="text-xs uppercase text-gray-500 mb-1">Email</div>
                         <a
-                          href="mailto:support.refinecv@gmail.com"
+                          href="mailto:refinecvhelp@gmail.com"
                           className="text-primary hover:underline font-medium"
                         >
-                          support.refinecv@gmail.com
+                          refinecvhelp@gmail.com
                         </a>
                       </div>
                     </div>
@@ -750,7 +750,7 @@ export default function ContactUs() {
               Get Started Free
             </button>
             <p className="text-white/80 text-sm">
-              Or email us at support.refinecv@gmail.com
+              Or email us at refinecvhelp@gmail.com
             </p>
           </div>
         </section>

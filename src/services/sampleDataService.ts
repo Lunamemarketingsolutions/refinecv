@@ -3,8 +3,7 @@ import {
   SAMPLE_CV_TEXT,
   SAMPLE_JD_TEXT,
   SAMPLE_ATS_RESULTS,
-  SAMPLE_JD_MATCH_RESULTS,
-  SAMPLE_ENHANCER_SECTIONS
+  SAMPLE_JD_MATCH_RESULTS
 } from './sampleDataConstants';
 
 export async function createATSSample(userId: string): Promise<string> {
@@ -103,85 +102,3 @@ export async function createJDMatchSample(userId: string): Promise<string> {
   }
 }
 
-export async function createEnhancerSample(userId: string): Promise<string> {
-  try {
-    const { data: cvUpload, error: cvError } = await supabase
-      .from('cv_uploads')
-      .insert({
-        user_id: userId,
-        file_name: 'Sample_CV_Naveen_Kumar.pdf',
-        file_path: `${userId}/sample_cv.pdf`,
-        file_size: 245760,
-        extracted_text: SAMPLE_CV_TEXT,
-        is_sample: true,
-      })
-      .select()
-      .maybeSingle();
-
-    if (cvError || !cvUpload) {
-      throw new Error('Failed to create sample CV upload');
-    }
-
-    const { data: enhancement, error: enhancementError } = await supabase
-      .from('cv_enhancements')
-      .insert({
-        user_id: userId,
-        cv_upload_id: cvUpload.id,
-        original_text: SAMPLE_CV_TEXT,
-        overall_score_before: 72,
-        overall_score_after: 72,
-        status: 'editing',
-        is_sample: true,
-      })
-      .select()
-      .maybeSingle();
-
-    if (enhancementError || !enhancement) {
-      throw new Error('Failed to create sample enhancement');
-    }
-
-    // Create sections with bullets
-    for (let i = 0; i < SAMPLE_ENHANCER_SECTIONS.length; i++) {
-      const section = SAMPLE_ENHANCER_SECTIONS[i];
-
-      const { data: sectionData, error: sectionError } = await supabase
-        .from('cv_enhancement_sections')
-        .insert({
-          enhancement_id: enhancement.id,
-          section_name: section.name,
-          section_order: i + 1,
-          rating_before: section.rating,
-          rating_after: section.rating,
-          total_bullets: section.total_bullets,
-          enhanced_bullets: section.name === 'Work Experience' ? 1 : 0,
-          is_sample: true,
-        })
-        .select()
-        .maybeSingle();
-
-      if (sectionError || !sectionData) continue;
-
-      // Create bullets for this section
-      for (let j = 0; j < section.bullets.length; j++) {
-        const bullet = section.bullets[j];
-
-        await supabase.from('cv_bullets').insert({
-          section_id: sectionData.id,
-          original_text: bullet.original,
-          current_text: bullet.enhanced ? bullet.current : bullet.original,
-          bullet_order: j + 1,
-          rating_before: bullet.rating || section.rating,
-          issues: JSON.stringify(bullet.issues || []),
-          ai_suggestions: JSON.stringify(bullet.aiSuggestions || []),
-          is_enhanced: bullet.enhanced || false,
-          is_sample: true,
-        });
-      }
-    }
-
-    return enhancement.id;
-  } catch (error) {
-    console.error('Error creating enhancer sample:', error);
-    throw error;
-  }
-}

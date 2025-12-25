@@ -1,12 +1,24 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import SocialLoginButton from './SocialLoginButton';
 
 export default function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signInWithGoogle } = useAuth();
+  
+  // Check for success message from reset password
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (location.state && typeof location.state === 'object' && 'message' in location.state) {
+      setSuccessMessage(location.state.message as string);
+      // Clear the state to prevent showing message on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -133,6 +145,12 @@ export default function LoginForm() {
       {success && (
         <div className="mb-6 p-4 bg-success/10 border-2 border-success/20 rounded-lg">
           <p className="text-success text-sm font-medium">{success}</p>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-6 p-4 bg-success/10 border-2 border-success/20 rounded-lg">
+          <p className="text-success text-sm font-medium">{successMessage}</p>
         </div>
       )}
 

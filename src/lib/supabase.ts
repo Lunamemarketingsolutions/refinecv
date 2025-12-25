@@ -73,7 +73,14 @@ if (!isValidUrl(supabaseUrl) || !supabaseAnonKey || supabaseAnonKey.includes('yo
   supabase = createMockClient();
 } else {
   console.log('Supabase initialized with URL:', supabaseUrl);
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log('Supabase anon key present:', !!supabaseAnonKey && supabaseAnonKey.length > 0);
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  });
 }
 
 export { supabase };

@@ -592,7 +592,7 @@ export default function PrivacyPolicy() {
                       <em>How: Go to Account Settings → Privacy → Delete Account</em>
                     </li>
                     <li>
-                      <em>Or email: support.refinecv@gmail.com with subject "Data Deletion Request"</em>
+                      <em>Or email: refinecvhelp@gmail.com with subject "Data Deletion Request"</em>
                     </li>
                   </ul>
                 </div>
@@ -636,7 +636,7 @@ export default function PrivacyPolicy() {
               </div>
 
               <Callout type="info" icon={Mail} title="Contact Our Privacy Team:">
-                <p className="font-semibold mb-2">Email: support.refinecv@gmail.com</p>
+                <p className="font-semibold mb-2">Email: refinecvhelp@gmail.com</p>
                 <p className="mb-2">
                   Subject Line: [Your Request - e.g., "Data Deletion Request", "Access My Data"]
                 </p>
@@ -791,7 +791,7 @@ export default function PrivacyPolicy() {
                   <p>
                     We do not knowingly collect personal information from children under 16. If you
                     believe your child under 16 has created an account, please contact us
-                    immediately at support.refinecv@gmail.com, and we will delete the account within 7 days.
+                    immediately at refinecvhelp@gmail.com, and we will delete the account within 7 days.
                   </p>
                 </div>
 
@@ -993,10 +993,10 @@ export default function PrivacyPolicy() {
                     <li>
                       <strong>Email:</strong>{' '}
                       <a
-                        href="mailto:support.refinecv@gmail.com"
+                        href="mailto:refinecvhelp@gmail.com"
                         className="text-primary hover:underline"
                       >
-                        support.refinecv@gmail.com
+                        refinecvhelp@gmail.com
                       </a>
                     </li>
                     <li>
@@ -1011,10 +1011,10 @@ export default function PrivacyPolicy() {
                     <li>
                       <strong>Email:</strong>{' '}
                       <a
-                        href="mailto:support.refinecv@gmail.com"
+                        href="mailto:refinecvhelp@gmail.com"
                         className="text-primary hover:underline"
                       >
-                        support.refinecv@gmail.com
+                        refinecvhelp@gmail.com
                       </a>
                     </li>
                     <li>
@@ -1035,10 +1035,10 @@ export default function PrivacyPolicy() {
                     <li>
                       <strong>Email:</strong>{' '}
                       <a
-                        href="mailto:support.refinecv@gmail.com"
+                        href="mailto:refinecvhelp@gmail.com"
                         className="text-primary hover:underline"
                       >
-                        support.refinecv@gmail.com
+                        refinecvhelp@gmail.com
                       </a>
                     </li>
                     <li>
@@ -1072,7 +1072,7 @@ export default function PrivacyPolicy() {
               </Link>
               <div>
                 <a
-                  href="mailto:support.refinecv@gmail.com"
+                  href="mailto:refinecvhelp@gmail.com"
                   className="text-white hover:underline opacity-90"
                 >
                   Have Questions? Contact Our Privacy Team

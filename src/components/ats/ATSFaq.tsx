@@ -43,7 +43,7 @@ export default function ATSFaq() {
     {
       id: 'guarantee',
       question: "What if my CV still doesn't pass ATS after using RefineCV?",
-      answer: 'If you follow all our recommendations and still face ATS rejections, email us at support.refinecv@gmail.com with your CV and the job link. We\'ll personally review and provide additional guidance. We\'re committed to your success.',
+      answer: 'If you follow all our recommendations and still face ATS rejections, email us at refinecvhelp@gmail.com with your CV and the job link. We\'ll personally review and provide additional guidance. We\'re committed to your success.',
     },
   ];
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, Target, Sparkles, Play } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { createATSSample, createJDMatchSample, createEnhancerSample } from '../../services/sampleDataService';
+import { createATSSample, createJDMatchSample } from '../../services/sampleDataService';
 
 interface FeatureCardsProps {
   featureUsage: {
@@ -78,7 +78,7 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
       usageColor: 'text-purple-600',
       buttonBg: 'bg-purple-600 hover:bg-purple-700',
       buttonText: 'Start Enhancement',
-      path: '/cv-improviser',
+      path: '/cv-enhancer',
       sampleType: 'enhancer' as const,
       borderColor: 'border-purple-600',
       textColor: 'text-purple-600',
@@ -107,9 +107,9 @@ export default function FeatureCards({ featureUsage }: FeatureCardsProps) {
         sampleId = await createJDMatchSample(user.id);
         targetPath = `/jd-match-tool/analyzing/${sampleId}`;
       } else {
-        // For CV Improviser, navigate directly (no sample creation needed)
+        // For CV Enhancer, navigate directly (no sample creation needed)
         setLoadingSample(null);
-        navigate('/cv-improviser');
+        navigate('/cv-enhancer');
         return;
       }
 

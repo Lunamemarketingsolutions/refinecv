@@ -40,10 +40,10 @@ export default function TrustBanner() {
           </p>
 
           <a
-            href="mailto:support.refinecv@gmail.com"
+            href="mailto:refinecvhelp@gmail.com"
             className="text-primary hover:text-primary/80 font-semibold underline transition-colors"
           >
-            Questions? Contact us at support.refinecv@gmail.com
+            Questions? Contact us at refinecvhelp@gmail.com
           </a>
         </div>
       </div>

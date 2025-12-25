@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { trackFeatureUsage } from '../usageTrackingService';
 import type { ATSAnalysis } from '../../types/ats';
 
 export interface SaveResumeParams {
@@ -171,6 +172,14 @@ export async function saveResumeAnalysis(params: SaveResumeParams): Promise<Stor
   if (!cvUploadData) {
     throw new Error('Failed to retrieve CV upload data');
   }
+
+  // Track feature usage (non-blocking, but await to ensure it's called)
+  // Note: Don't pass analysisData.id as analysisId because it references ats_analyses,
+  // but the foreign key constraint expects cv_analyses. We use cv_upload_id instead.
+  trackFeatureUsage(userId, 'ats_analyzer', cvUploadId).catch((err) => {
+    console.error('Failed to track ATS analyzer usage:', err);
+    // Don't throw - tracking failure shouldn't break the upload flow
+  });
 
   return {
     cvUpload: cvUploadData,

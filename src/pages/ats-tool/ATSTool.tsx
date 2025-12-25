@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { FileCheck2, Loader2, History, CheckCircle2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/dashboard/Sidebar';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useAuth } from '../../contexts/AuthContext';
 import FileUpload from '../../components/ats-tool/FileUpload';
@@ -13,6 +15,7 @@ import { uploadResumeToStorage } from '../../services/ats/storageService';
 import { saveResumeAnalysis, getAllResumes, type StoredResume } from '../../services/ats/resumeService';
 import { generateAllSuggestions, getSuggestionsForResume, updateSuggestionStatus } from '../../services/ats/aiSuggestionService';
 import { applySuggestionEdit } from '../../services/ats/editWorkflowService';
+import { checkUsageLimit, getToolDisplayName } from '../../services/usageLimitService';
 import type { ATSAnalysis, ATSSuggestion } from '../../types/ats';
 
 interface UploadProgress {
@@ -24,6 +27,7 @@ interface UploadProgress {
 export default function ATSTool() {
   const { user } = useAuth();
   const { data } = useDashboardData();
+  const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<ATSAnalysis | null>(null);
@@ -38,6 +42,19 @@ export default function ATSTool() {
   const handleFileSelect = async (file: File) => {
     if (!user) {
       setError('Please log in to use this feature');
+      return;
+    }
+
+    // Check usage limit for free plan users
+    const limitCheck = await checkUsageLimit(user.id, 'ats_analyzer', 3);
+    if (!limitCheck.allowed) {
+      // Redirect to pricing page with message
+      navigate('/pricing', { 
+        state: { 
+          message: limitCheck.reason || `You've reached the limit for ${getToolDisplayName('ats_analyzer')}. Upgrade to premium for unlimited access.`,
+          toolName: getToolDisplayName('ats_analyzer')
+        } 
+      });
       return;
     }
 
@@ -260,7 +277,9 @@ export default function ATSTool() {
         usageToday={data.user.plan === 'free' ? { total: totalUsageToday, limit: totalLimit } : undefined}
       />
 
-      <main className="flex-1 ml-60 p-8 lg:p-10">
+      <main className="flex-1 ml-60" style={{ fontFamily: 'Lato, sans-serif' }}>
+        <Header />
+        <div className="p-8 lg:p-10">
         <div className="max-w-7xl mx-auto">
           <div className="mb-6">
             <Link to="/dashboard" className="text-gray-600 text-sm hover:text-primary">
@@ -357,6 +376,8 @@ export default function ATSTool() {
             />
           )}
         </div>
+        </div>
+        <Footer />
       </main>
     </div>
   );

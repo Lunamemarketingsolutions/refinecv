@@ -5,6 +5,85 @@ export interface CVContent {
   content: Record<string, string[] | Record<string, string>>;
 }
 
+// Helper to parse HTML and extract text with formatting info
+interface FormattedText {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+}
+
+// Helper to extract plain text from HTML (preserving structure info)
+function extractTextFromHTML(html: string): { text: string; isList: boolean; align: string; formattedParts: FormattedText[] } {
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  // Check if it's a list
+  const hasListFormatting = /<ul[^>]*>|<li[^>]*>/i.test(html);
+  
+  // Extract alignment
+  let align = 'left';
+  const alignClassMatch = html.match(/class="[^"]*ql-align-(\w+)/);
+  const alignStyleMatch = html.match(/style="[^"]*text-align:\s*(\w+)/);
+  if (alignClassMatch) {
+    align = alignClassMatch[1];
+  } else if (alignStyleMatch) {
+    align = alignStyleMatch[1];
+  }
+  
+  // Extract formatted text parts by walking the DOM tree
+  const formattedParts: FormattedText[] = [];
+  
+  const walkNode = (node: Node, currentFormat: { bold?: boolean; italic?: boolean; underline?: boolean } = {}) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || '';
+      if (text.trim()) {
+        formattedParts.push({
+          text: text.trim(),
+          ...currentFormat
+        });
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as HTMLElement;
+      const tagName = element.tagName.toLowerCase();
+      
+      // Update current format based on tag
+      const newFormat = { ...currentFormat };
+      if (tagName === 'strong' || tagName === 'b') {
+        newFormat.bold = true;
+      } else if (tagName === 'em' || tagName === 'i') {
+        newFormat.italic = true;
+      } else if (tagName === 'u') {
+        newFormat.underline = true;
+      }
+      
+      // Recursively process child nodes with updated format
+      Array.from(element.childNodes).forEach(child => walkNode(child, newFormat));
+    }
+  };
+  
+  // Remove list tags before parsing (we'll handle list separately)
+  const contentWithoutList = html
+    .replace(/^<ul[^>]*>/i, '')
+    .replace(/<\/ul>$/i, '')
+    .replace(/<li[^>]*>/gi, '')
+    .replace(/<\/li>/gi, '');
+  
+  const parseDiv = document.createElement('div');
+  parseDiv.innerHTML = contentWithoutList;
+  Array.from(parseDiv.childNodes).forEach(node => walkNode(node));
+  
+  // If no formatted parts found, get plain text
+  const plainText = tempDiv.textContent || tempDiv.innerText || '';
+  
+  return {
+    text: plainText.trim(),
+    isList: hasListFormatting,
+    align,
+    formattedParts: formattedParts.length > 0 ? formattedParts : [{ text: plainText.trim() }]
+  };
+}
+
 export async function generatePDFFromCV(
   cvContent: CVContent,
   filename: string = `Refined_CV_${new Date().toISOString().split('T')[0]}.pdf`
@@ -96,10 +175,80 @@ export async function generatePDFFromCV(
       for (const bullet of sectionContent) {
         checkPageBreak(8);
         
-        // Split long bullets into multiple lines
-        const lines = doc.splitTextToSize(`• ${bullet}`, maxWidth - 10);
-        doc.text(lines, margin + 5, yPosition);
-        yPosition += lines.length * 5 + 2;
+        // Parse HTML to extract formatting and structure
+        const parsed = extractTextFromHTML(bullet);
+        
+        // Determine if we should show a bullet (only if list formatting is present)
+        const prefix = parsed.isList ? '• ' : '';
+        const baseStartX = parsed.isList ? margin + 5 : margin;
+        const availableWidth = maxWidth - (baseStartX - margin);
+        
+        // Build the full text with prefix
+        const fullText = prefix + parsed.text;
+        
+        // Split text into lines that fit the width
+        const lines = doc.splitTextToSize(fullText, availableWidth);
+        
+        // Calculate alignment for the first line
+        let firstLineOffset = 0;
+        if (parsed.align === 'center' && lines.length > 0) {
+          const firstLineWidth = doc.getTextWidth(lines[0]);
+          firstLineOffset = (availableWidth - firstLineWidth) / 2;
+        } else if (parsed.align === 'right' && lines.length > 0) {
+          const firstLineWidth = doc.getTextWidth(lines[0]);
+          firstLineOffset = availableWidth - firstLineWidth;
+        }
+        
+        // Check if text has bold, italic, or underline
+        const hasBold = parsed.formattedParts.some(p => p.bold);
+        const hasItalic = parsed.formattedParts.some(p => p.italic);
+        const hasUnderline = parsed.formattedParts.some(p => p.underline);
+        
+        // Determine font style
+        let fontStyle: 'normal' | 'bold' | 'italic' | 'bolditalic' = 'normal';
+        if (hasBold && hasItalic) {
+          fontStyle = 'bolditalic';
+        } else if (hasBold) {
+          fontStyle = 'bold';
+        } else if (hasItalic) {
+          fontStyle = 'italic';
+        }
+        
+        doc.setFont('helvetica', fontStyle);
+        
+        // Render each line with proper alignment
+        const lineHeight = 5;
+        let currentY = yPosition;
+        
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+          const line = lines[lineIndex];
+          // First line uses alignment offset, subsequent lines align based on alignment type
+          let lineStartX = baseStartX;
+          if (lineIndex === 0) {
+            lineStartX = baseStartX + firstLineOffset;
+          } else if (parsed.align === 'center') {
+            const lineWidth = doc.getTextWidth(line);
+            lineStartX = baseStartX + (availableWidth - lineWidth) / 2;
+          } else if (parsed.align === 'right') {
+            const lineWidth = doc.getTextWidth(line);
+            lineStartX = baseStartX + (availableWidth - lineWidth);
+          }
+          
+          // Render the line
+          doc.text(line, lineStartX, currentY);
+          
+          // Draw underline if needed
+          if (hasUnderline) {
+            const textWidth = doc.getTextWidth(line);
+            doc.setDrawColor(15, 28, 42);
+            doc.setLineWidth(0.1);
+            doc.line(lineStartX, currentY + 1, lineStartX + textWidth, currentY + 1);
+          }
+          
+          currentY += lineHeight;
+        }
+        
+        yPosition = currentY + 2;
       }
     } else if (typeof sectionContent === 'object') {
       // Handle structured content

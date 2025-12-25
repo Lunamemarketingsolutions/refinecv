@@ -7,3 +7,20 @@
 * {
   font-family: 'Lato', sans-serif;
 }
+
+/* Quill alignment classes for CV preview */
+.ql-align-center {
+  text-align: center !important;
+}
+
+.ql-align-right {
+  text-align: right !important;
+}
+
+.ql-align-left {
+  text-align: left !important;
+}
+
+.ql-align-justify {
+  text-align: justify !important;
+}

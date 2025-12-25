@@ -145,10 +145,14 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => {
-                          const toolPath = activity.toolUsed === 'ats_analyzer' ? '/ats-tool/results'
-                            : activity.toolUsed === 'jd_matcher' ? '/jd-match-tool/results'
-                            : '/cv-enhancer/editor';
-                          navigate(`${toolPath}/${activity.id}`);
+                          if (activity.toolUsed === 'ats_analyzer') {
+                            navigate(`/ats-tool/results/${activity.id}`);
+                          } else if (activity.toolUsed === 'jd_matcher') {
+                            navigate(`/jd-match-tool/results/${activity.id}`);
+                          } else if (activity.toolUsed === 'cv_enhancer') {
+                            // Navigate to CV Enhancer
+                            navigate('/cv-enhancer');
+                          }
                         }}
                         className="text-primary hover:underline text-sm font-semibold"
                       >

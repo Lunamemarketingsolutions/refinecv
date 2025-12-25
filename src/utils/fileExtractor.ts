@@ -11,14 +11,25 @@ export interface ExtractionResult {
 
 export async function extractTextFromFile(file: File): Promise<ExtractionResult> {
   try {
-    if (file.type === 'application/pdf') {
+    // Get file extension as fallback (some browsers don't set MIME type correctly)
+    const fileName = file.name.toLowerCase();
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+    
+    // Check if it's a PDF (by MIME type or extension)
+    const isPDF = file.type === 'application/pdf' || fileExtension === '.pdf';
+    
+    // Check if it's a DOCX (by MIME type or extension)
+    const isDOCX = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                   fileExtension === '.docx';
+    
+    if (isPDF) {
       const validation = validatePDFFile(file);
       if (!validation.valid) {
         return { success: false, error: validation.error };
       }
       const text = await extractTextFromPDF(file);
       return { success: true, text };
-    } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    } else if (isDOCX) {
       const validation = validateDOCXFile(file);
       if (!validation.valid) {
         return { success: false, error: validation.error };
@@ -50,12 +61,18 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
     return { valid: false, error: 'File size must be less than 5MB' };
   }
 
-  const supportedTypes: SupportedFileType[] = [
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ];
+  // Get file extension as fallback (some browsers don't set MIME type correctly)
+  const fileName = file.name.toLowerCase();
+  const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+  
+  // Check if it's a PDF (by MIME type or extension)
+  const isPDF = file.type === 'application/pdf' || fileExtension === '.pdf';
+  
+  // Check if it's a DOCX (by MIME type or extension)
+  const isDOCX = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                 fileExtension === '.docx';
 
-  if (!supportedTypes.includes(file.type as SupportedFileType)) {
+  if (!isPDF && !isDOCX) {
     return {
       valid: false,
       error: 'Unsupported file type. Only PDF and DOCX files are supported.',
@@ -66,8 +83,16 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
 }
 
 export function getFileExtension(file: File): string {
+  // Check MIME type first
   if (file.type === 'application/pdf') return 'pdf';
   if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
+  
+  // Fallback to file extension if MIME type is not set
+  const fileName = file.name.toLowerCase();
+  const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+  if (fileExtension === '.pdf') return 'pdf';
+  if (fileExtension === '.docx') return 'docx';
+  
   return 'unknown';
 }
 

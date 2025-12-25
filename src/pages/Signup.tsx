@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import SocialLoginButton from '../components/auth/SocialLoginButton';
 import LoginValueProp from '../components/auth/LoginValueProp';
 
@@ -78,24 +79,88 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      const { error: signUpError } = await signUp(email, password);
+      const { data: signUpData, error: signUpError } = await signUp(email, password);
 
       if (signUpError) {
-        if (signUpError.message.includes('already registered')) {
+        console.error('Signup error:', signUpError);
+        if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists')) {
           setError('This email is already registered. Please log in.');
         } else {
-          setError(signUpError.message);
+          setError(signUpError.message || 'Failed to create account. Please try again.');
         }
+        setIsLoading(false);
         return;
       }
 
-      setSuccess('Account created successfully! Please check your email to verify your account.');
+      // Check if user was created
+      if (!signUpData?.user) {
+        console.error('No user returned from signup');
+        setError('Account creation failed. Please try again.');
+        setIsLoading(false);
+        return;
+      }
 
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      console.log('✅ User created:', {
+        userId: signUpData.user.id,
+        email: signUpData.user.email,
+        emailConfirmed: !!signUpData.user.email_confirmed_at,
+      });
+
+      // Ensure user profile is created (backup if trigger doesn't fire)
+      // Wait a moment for trigger to fire first
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      try {
+        // Check if profile already exists (trigger might have created it)
+        const { data: existingProfile } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('id', signUpData.user.id)
+          .maybeSingle();
+
+        if (!existingProfile) {
+          // Profile doesn't exist, create it manually
+          console.log('Creating user profile manually...');
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: signUpData.user.id,
+              full_name: email.split('@')[0],
+              plan_type: 'free',
+            });
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+            // Don't fail signup if profile creation fails - trigger should handle it
+            // But log it for debugging
+          } else {
+            console.log('✅ User profile created manually');
+          }
+        } else {
+          console.log('✅ User profile already exists (created by trigger)');
+        }
+      } catch (profileErr) {
+        console.error('Profile creation exception:', profileErr);
+        // Continue anyway - trigger should handle it
+      }
+
+      // Check if email confirmation is required
+      if (signUpData.user.email_confirmed_at) {
+        // Email already confirmed (if confirmation is disabled in Supabase)
+        setSuccess('Account created successfully! Redirecting to dashboard...');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } else {
+        // Email confirmation required
+        setSuccess('Account created successfully! Please check your email to verify your account. You will be redirected to login in a moment.');
+        setTimeout(() => {
+          navigate('/login');
+        }, 4000);
+      }
 
     } catch (err) {
+      console.error('Signup exception:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

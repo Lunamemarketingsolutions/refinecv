@@ -4,7 +4,7 @@ export default function FeatureTools() {
   const tools = [
     { icon: Eye, title: 'CV → ATS View', description: 'See your resume through ATS systems' },
     { icon: Link, title: 'JD → CV Comparison', description: 'Match your CV to job requirements' },
-    { icon: Wand2, title: 'CV Improviser', description: 'Get intelligent improvement suggestions' },
+    { icon: Wand2, title: 'CV Enhancer', description: 'Get intelligent improvement suggestions' },
     { icon: Search, title: 'Find Jobs', description: 'Discover relevant job opportunities' },
     { icon: Users, title: 'Find Connections', description: 'Connect with referrals on LinkedIn' },
     { icon: BarChart, title: 'Dashboard with ATS Score', description: 'Track your CV performance metrics' },

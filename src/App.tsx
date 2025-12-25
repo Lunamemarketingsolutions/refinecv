@@ -7,10 +7,10 @@ import ContactUs from './pages/ContactUs';
 import Pricing from './pages/Pricing';
 import ATSAnalyzer from './pages/ATSAnalyzer';
 import JDMatcher from './pages/JDMatcher';
-import CVEnhancer from './pages/CVEnhancer';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import MyCVs from './pages/MyCVs';
 import History from './pages/History';
@@ -22,10 +22,7 @@ import JDMatchUpload from './pages/jd-match-tool/JDMatchUpload';
 import JDMatchAnalyzing from './pages/jd-match-tool/JDMatchAnalyzing';
 import JDMatchResults from './pages/jd-match-tool/JDMatchResults';
 import JDMatcherTool from './pages/jd-match-tool/JDMatcherTool';
-import EnhancerUpload from './pages/cv-enhancer-tool/EnhancerUpload';
-import EnhancerAnalyzing from './pages/cv-enhancer-tool/EnhancerAnalyzing';
-import EnhancerEditor from './pages/cv-enhancer-tool/EnhancerEditor';
-import CVImproviser from './pages/CVImproviser';
+import CVEnhancer from './pages/CVEnhancer';
 import EmailConfirm from './pages/EmailConfirm';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
@@ -45,10 +42,10 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/features/ats-analyzer" element={<ATSAnalyzer />} />
             <Route path="/features/jd-matcher" element={<JDMatcher />} />
-            <Route path="/features/cv-enhancer" element={<CVEnhancer />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/my-cvs" element={<MyCVs />} />
             <Route path="/history" element={<History />} />
@@ -60,10 +57,8 @@ function App() {
             <Route path="/jd-match-tool/old/upload" element={<JDMatchUpload />} />
             <Route path="/jd-match-tool/old/analyzing/:matchId" element={<JDMatchAnalyzing />} />
             <Route path="/jd-match-tool/old/results/:matchId" element={<JDMatchResults />} />
-            <Route path="/cv-enhancer" element={<EnhancerUpload />} />
-            <Route path="/cv-enhancer/analyzing/:enhancementId" element={<EnhancerAnalyzing />} />
-            <Route path="/cv-enhancer/editor/:enhancementId" element={<EnhancerEditor />} />
-            <Route path="/cv-improviser" element={<CVImproviser />} />
+            <Route path="/cv-enhancer" element={<CVEnhancer />} />
+            <Route path="/cv-improviser" element={<CVEnhancer />} />
             <Route path="/auth/confirm" element={<EmailConfirm />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />

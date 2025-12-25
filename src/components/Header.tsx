@@ -68,7 +68,6 @@ export default function Header() {
                   <div className="w-56 bg-white rounded-lg shadow-lg py-2">
                     <Link to="/features/ats-analyzer" className="block px-4 py-2 text-secondary hover:bg-background hover:text-primary transition-colors">ATS Analyzer</Link>
                     <Link to="/features/jd-matcher" className="block px-4 py-2 text-secondary hover:bg-background hover:text-primary transition-colors">JD CV Match Analyzer</Link>
-                    <Link to="/features/cv-enhancer" className="block px-4 py-2 text-secondary hover:bg-background hover:text-primary transition-colors">Instant CV Enhancer</Link>
                   </div>
                 </div>
               )}
@@ -78,7 +77,7 @@ export default function Header() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            {user ? (
+            {user && location.pathname !== '/' ? (
               <>
                 <Link to="/dashboard" className="text-secondary hover:text-primary transition-colors font-semibold">Dashboard</Link>
                 <button
@@ -89,7 +88,7 @@ export default function Header() {
                   Sign Out
                 </button>
               </>
-            ) : (
+            ) : !user ? (
               <>
                 <Link to="/login" className="text-secondary hover:text-primary transition-colors font-semibold">Login</Link>
                 <Link
@@ -97,10 +96,10 @@ export default function Header() {
                   className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:scale-105 hover:shadow-lg transition-all"
                   data-cta="header-get-started"
                 >
-                  {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : 'Get Started'}
+                  {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : 'Get Started'}
                 </Link>
               </>
-            )}
+            ) : null}
           </div>
 
           <button
@@ -128,14 +127,13 @@ export default function Header() {
                 <div className="pl-4 space-y-2">
                   <Link to="/features/ats-analyzer" className="block text-secondary hover:text-primary">ATS Analyzer</Link>
                   <Link to="/features/jd-matcher" className="block text-secondary hover:text-primary">JD CV Match Analyzer</Link>
-                  <Link to="/features/cv-enhancer" className="block text-secondary hover:text-primary">Instant CV Enhancer</Link>
                 </div>
               )}
             </div>
             <Link to="/pricing" className={`block text-secondary hover:text-primary font-semibold ${location.pathname === '/pricing' ? 'text-primary' : ''}`}>Pricing</Link>
             <Link to="/contact" className={`block text-secondary hover:text-primary font-semibold ${location.pathname === '/contact' ? 'text-primary' : ''}`}>Contact Us</Link>
             <div className="pt-4 border-t border-gray-200 space-y-3">
-              {user ? (
+              {user && location.pathname !== '/' ? (
                 <>
                   <Link to="/dashboard" className="block text-secondary hover:text-primary font-semibold">Dashboard</Link>
                   <button
@@ -145,7 +143,7 @@ export default function Header() {
                     Sign Out
                   </button>
                 </>
-              ) : (
+              ) : !user ? (
                 <>
                   <Link to="/login" className="block text-secondary hover:text-primary font-semibold">Login</Link>
                   <Link
@@ -153,10 +151,10 @@ export default function Header() {
                     className="block bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-center"
                     data-cta="mobile-header-get-started"
                   >
-                    {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : 'Get Started'}
+                    {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : 'Get Started'}
                   </Link>
                 </>
-              )}
+              ) : null}
             </div>
           </nav>
         </div>
