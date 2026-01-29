@@ -75,6 +75,7 @@ export default function Header() {
               )}
             </div>
             <Link to="/pricing" className={`text-secondary hover:text-primary transition-colors font-semibold ${location.pathname === '/pricing' ? 'border-b-2 border-primary' : ''}`}>Pricing</Link>
+            <Link to="/blog" className={`text-secondary hover:text-primary transition-colors font-semibold ${location.pathname === '/blog' || location.pathname.startsWith('/blog/') ? 'border-b-2 border-primary' : ''}`}>Blog</Link>
             <Link to="/contact" className={`text-secondary hover:text-primary transition-colors font-semibold ${location.pathname === '/contact' ? 'border-b-2 border-primary' : ''}`}>Contact Us</Link>
           </nav>
 
@@ -135,6 +136,7 @@ export default function Header() {
               )}
             </div>
             <Link to="/pricing" className={`block text-secondary hover:text-primary font-semibold ${location.pathname === '/pricing' ? 'text-primary' : ''}`}>Pricing</Link>
+            <Link to="/blog" className={`block text-secondary hover:text-primary font-semibold ${location.pathname === '/blog' || location.pathname.startsWith('/blog/') ? 'text-primary' : ''}`}>Blog</Link>
             <Link to="/contact" className={`block text-secondary hover:text-primary font-semibold ${location.pathname === '/contact' ? 'text-primary' : ''}`}>Contact Us</Link>
             <div className="pt-4 border-t border-gray-200 space-y-3">
               {user ? (
