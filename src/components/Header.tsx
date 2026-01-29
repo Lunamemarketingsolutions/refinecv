@@ -69,6 +69,7 @@ export default function Header() {
                     <Link to="/features/ats-analyzer" className="block px-4 py-2 text-secondary hover:bg-background hover:text-primary transition-colors">ATS Analyzer</Link>
                     <Link to="/features/jd-matcher" className="block px-4 py-2 text-secondary hover:bg-background hover:text-primary transition-colors">JD CV Match Analyzer</Link>
                     <Link to="/features/cv-enhancer" className="block px-4 py-2 text-secondary hover:bg-background hover:text-primary transition-colors">Instant CV Enhancer</Link>
+                    <Link to="/features/interview-ai" className="block px-4 py-2 text-secondary hover:bg-background hover:text-primary transition-colors">Interview Me AI</Link>
                   </div>
                 </div>
               )}
@@ -97,7 +98,7 @@ export default function Header() {
                   className="bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:scale-105 hover:shadow-lg transition-all"
                   data-cta="header-get-started"
                 >
-                  {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : 'Get Started'}
+                  {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : location.pathname === '/features/interview-ai' ? 'Start Practicing' : 'Get Started'}
                 </Link>
               </>
             )}
@@ -129,6 +130,7 @@ export default function Header() {
                   <Link to="/features/ats-analyzer" className="block text-secondary hover:text-primary">ATS Analyzer</Link>
                   <Link to="/features/jd-matcher" className="block text-secondary hover:text-primary">JD CV Match Analyzer</Link>
                   <Link to="/features/cv-enhancer" className="block text-secondary hover:text-primary">Instant CV Enhancer</Link>
+                  <Link to="/features/interview-ai" className="block text-secondary hover:text-primary">Interview Me AI</Link>
                 </div>
               )}
             </div>
@@ -153,7 +155,7 @@ export default function Header() {
                     className="block bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-center"
                     data-cta="mobile-header-get-started"
                   >
-                    {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : 'Get Started'}
+                    {location.pathname === '/features/ats-analyzer' ? 'Analyze My CV' : location.pathname === '/features/jd-matcher' ? 'Match My CV' : location.pathname === '/features/cv-enhancer' ? 'Enhance My CV' : location.pathname === '/features/interview-ai' ? 'Start Practicing' : 'Get Started'}
                   </Link>
                 </>
               )}

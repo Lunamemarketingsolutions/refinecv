@@ -8,6 +8,7 @@ import Pricing from './pages/Pricing';
 import ATSAnalyzer from './pages/ATSAnalyzer';
 import JDMatcher from './pages/JDMatcher';
 import CVEnhancer from './pages/CVEnhancer';
+import InterviewAI from './pages/InterviewAI';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -42,6 +43,7 @@ function App() {
             <Route path="/features/ats-analyzer" element={<ATSAnalyzer />} />
             <Route path="/features/jd-matcher" element={<JDMatcher />} />
             <Route path="/features/cv-enhancer" element={<CVEnhancer />} />
+            <Route path="/features/interview-ai" element={<InterviewAI />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
